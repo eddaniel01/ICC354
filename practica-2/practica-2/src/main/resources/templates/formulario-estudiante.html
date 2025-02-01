@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Formulario de Estudiante</title>
+    <style>
+        button {
+            padding: 8px 12px;
+            border: none;
+            background-color: #007bff;
+            color: white;
+            cursor: pointer;
+            font-size: 14px;
+            margin: 5px;
+            border-radius: 5px;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        .cancel-button {
+            background-color: #6c757d;
+        }
+
+        .cancel-button:hover {
+            background-color: #5a6268;
+        }
+    </style>
+</head>
+<body>
+
+<h1>Nuevo Estudiante</h1>
+
+<form th:action="${estudiante.matricula} ? @{/estudiantes/actualizar} : @{/estudiantes/guardar}"
+      th:object="${estudiante}"
+      method="post">
+
+    <input type="hidden" th:field="*{matricula}" />
+
+    <label>Nombre: <input type="text" th:field="*{nombre}" required /></label><br/>
+    <label>Apellido: <input type="text" th:field="*{apellido}" required /></label><br/>
+    <label>Teléfono: <input type="text" th:field="*{telefono}" required /></label><br/>
+
+    <button type="submit">Guardar</button>
+</form>
+
+<!-- Botón para volver a la lista -->
+<form action="/estudiantes" method="get">
+    <button type="submit" class="cancel-button">Volver a la lista</button>
+</form>
+
+</body>
+</html>

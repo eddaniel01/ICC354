@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Lista de Estudiantes</title>
+    <style>
+        button {
+            padding: 8px 12px;
+            border: none;
+            background-color: #007bff;
+            color: white;
+            cursor: pointer;
+            font-size: 14px;
+            margin: 5px;
+            border-radius: 5px;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        .delete-button {
+            background-color: #dc3545;
+        }
+
+        .delete-button:hover {
+            background-color: #c82333;
+        }
+    </style>
+</head>
+<body>
+
+<h1>Lista de Estudiantes</h1>
+
+<!-- Botón para agregar un estudiante -->
+<form action="/estudiantes/nuevo" method="get">
+    <button type="submit">Agregar Estudiante</button>
+</form>
+
+<table border="1">
+    <tr>
+        <th>Matrícula</th><th>Nombre</th><th>Apellido</th><th>Teléfono</th><th>Acciones</th>
+    </tr>
+    <tr th:each="estudiante : ${estudiantes}">
+        <td th:text="${estudiante.matricula}"></td>
+        <td th:text="${estudiante.nombre}"></td>
+        <td th:text="${estudiante.apellido}"></td>
+        <td th:text="${estudiante.telefono}"></td>
+        <td>
+            <!-- Botón para editar -->
+            <form th:action="@{/estudiantes/editar/{matricula}(matricula=${estudiante.matricula})}" method="get">
+                <button type="submit">Editar</button>
+            </form>
+
+            <!-- Botón para eliminar -->
+            <form th:action="@{/estudiantes/eliminar/{matricula}(matricula=${estudiante.matricula})}" method="post">
+                <button type="submit" class="delete-button">Eliminar</button>
+            </form>
+        </td>
+    </tr>
+</table>
+
+</body>
+</html>
