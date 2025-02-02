@@ -32,7 +32,23 @@
         }
     </style>
     <script>
-        function seleccionarEstudiante() {
+        function seleccionarEstudiante(radio) {
+            // Si el radio button ya estaba seleccionado, lo deseleccionamos
+            if (radio.checked && radio.dataset.selected === "true") {
+                radio.checked = false;
+                radio.dataset.selected = "false";
+            } else {
+                // Marcamos el radio como seleccionado
+                let radios = document.getElementsByName("selectedEstudiante");
+                radios.forEach(r => r.dataset.selected = "false"); // Reiniciar estado de todos
+                radio.dataset.selected = "true"; // Marcar solo este
+            }
+
+            // Llamamos a la función que habilita o deshabilita los botones
+            actualizarBotones();
+        }
+
+        function actualizarBotones() {
             let seleccion = document.querySelector('input[name="selectedEstudiante"]:checked');
             let actualizarBtn = document.getElementById("actualizarBtn");
             let eliminarBtn = document.getElementById("eliminarBtn");
@@ -79,7 +95,7 @@
         <td th:text="${estudiante.apellido}"></td>
         <td th:text="${estudiante.telefono}"></td>
         <td style="text-align: center;">
-            <input type="radio" name="selectedEstudiante" th:value="${estudiante.matricula}" onclick="seleccionarEstudiante()">
+            <input type="radio" name="selectedEstudiante" th:value="${estudiante.matricula}" onclick="seleccionarEstudiante(this)">
         </td>
     </tr>
 </table>
