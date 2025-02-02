@@ -25,7 +25,40 @@
         .delete-button:hover {
             background-color: #c82333;
         }
+
+        .disabled {
+            background-color: #6c757d;
+            cursor: not-allowed;
+        }
     </style>
+    <script>
+        function seleccionarEstudiante() {
+            let seleccion = document.querySelector('input[name="selectedEstudiante"]:checked');
+            let actualizarBtn = document.getElementById("actualizarBtn");
+            let eliminarBtn = document.getElementById("eliminarBtn");
+
+            if (seleccion) {
+                actualizarBtn.disabled = false;
+                actualizarBtn.classList.remove("disabled");
+                eliminarBtn.disabled = false;
+                eliminarBtn.classList.remove("disabled");
+            } else {
+                actualizarBtn.disabled = true;
+                actualizarBtn.classList.add("disabled");
+                eliminarBtn.disabled = true;
+                eliminarBtn.classList.add("disabled");
+            }
+        }
+
+        function enviarFormulario(accion) {
+            let seleccion = document.querySelector('input[name="selectedEstudiante"]:checked');
+            if (seleccion) {
+                let matricula = seleccion.value;
+                document.getElementById(accion + "Form").action = "/estudiantes/" + accion + "/" + matricula;
+                document.getElementById(accion + "Form").submit();
+            }
+        }
+    </script>
 </head>
 <body>
 
@@ -38,26 +71,27 @@
 
 <table border="1">
     <tr>
-        <th>Matrícula</th><th>Nombre</th><th>Apellido</th><th>Teléfono</th><th>Acciones</th>
+        <th>Matrícula</th><th>Nombre</th><th>Apellido</th><th>Teléfono</th><th>Seleccionar</th>
     </tr>
     <tr th:each="estudiante : ${estudiantes}">
         <td th:text="${estudiante.matricula}"></td>
         <td th:text="${estudiante.nombre}"></td>
         <td th:text="${estudiante.apellido}"></td>
         <td th:text="${estudiante.telefono}"></td>
-        <td>
-            <!-- Botón para editar -->
-            <form th:action="@{/estudiantes/editar/{matricula}(matricula=${estudiante.matricula})}" method="get">
-                <button type="submit">Editar</button>
-            </form>
-
-            <!-- Botón para eliminar -->
-            <form th:action="@{/estudiantes/eliminar/{matricula}(matricula=${estudiante.matricula})}" method="post">
-                <button type="submit" class="delete-button">Eliminar</button>
-            </form>
+        <td style="text-align: center;">
+            <input type="radio" name="selectedEstudiante" th:value="${estudiante.matricula}" onclick="seleccionarEstudiante()">
         </td>
     </tr>
 </table>
+
+<!-- Botones para Actualizar y Eliminar (se activan solo si hay un estudiante seleccionado) -->
+<form id="editarForm" method="get">
+    <button type="button" id="actualizarBtn" class="disabled" disabled onclick="enviarFormulario('editar')">Actualizar</button>
+</form>
+
+<form id="eliminarForm" method="post">
+    <button type="button" id="eliminarBtn" class="delete-button disabled" disabled onclick="enviarFormulario('eliminar')">Eliminar</button>
+</form>
 
 </body>
 </html>
