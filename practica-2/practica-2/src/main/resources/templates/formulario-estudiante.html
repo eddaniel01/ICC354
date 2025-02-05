@@ -2,16 +2,55 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
     <title>Formulario de Estudiante</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            text-align: center;
+            margin: 20px;
+        }
+
+        h1 {
+            color: #333;
+        }
+
+        form {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+            width: 40%;
+            margin: 20px auto;
+            text-align: left;
+        }
+
+        label {
+            font-weight: bold;
+            display: block;
+            margin-top: 10px;
+        }
+
+        input[type="text"] {
+            width: 100%;
+            padding: 8px;
+            margin-top: 5px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+
         button {
-            padding: 8px 12px;
+            padding: 10px 15px;
             border: none;
             background-color: #007bff;
             color: white;
             cursor: pointer;
-            font-size: 14px;
-            margin: 5px;
+            font-size: 16px;
+            margin-top: 15px;
             border-radius: 5px;
+            transition: background 0.3s;
+            width: 100%;
         }
 
         button:hover {
@@ -31,22 +70,36 @@
 
 <h1>Nuevo Estudiante</h1>
 
-<form th:action="${estudiante.matricula} ? @{/estudiantes/actualizar} : @{/estudiantes/guardar}"
-      th:object="${estudiante}"
-      method="post">
-
+<form th:if="${estudiante.matricula}" th:action="@{/estudiantes/actualizar}" th:object="${estudiante}" method="post">
     <input type="hidden" th:field="*{matricula}" />
+    <label>Nombre:</label>
+    <input type="text" th:field="*{nombre}" required />
 
-    <label>Nombre: <input type="text" th:field="*{nombre}" required /></label><br/>
-    <label>Apellido: <input type="text" th:field="*{apellido}" required /></label><br/>
-    <label>Teléfono: <input type="text" th:field="*{telefono}" required /></label><br/>
+    <label>Apellido:</label>
+    <input type="text" th:field="*{apellido}" required />
 
-    <button type="submit">Guardar</button>
+    <label>Teléfono:</label>
+    <input type="text" th:field="*{telefono}" required />
+
+    <button type="submit"><i class="fas fa-save"></i> Actualizar</button>
+</form>
+
+<form th:unless="${estudiante.matricula}" th:action="@{/estudiantes/guardar}" th:object="${estudiante}" method="post">
+    <label>Nombre:</label>
+    <input type="text" th:field="*{nombre}" required />
+
+    <label>Apellido:</label>
+    <input type="text" th:field="*{apellido}" required />
+
+    <label>Teléfono:</label>
+    <input type="text" th:field="*{telefono}" required />
+
+    <button type="submit"><i class="fas fa-save"></i> Guardar</button>
 </form>
 
 <!-- Botón para volver a la lista -->
 <form action="/estudiantes" method="get">
-    <button type="submit" class="cancel-button">Volver a la lista</button>
+    <button type="submit" class="cancel-button"><i class="fas fa-arrow-left"></i> Volver a la lista</button>
 </form>
 
 </body>
