@@ -6,21 +6,32 @@
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-<h2>Nuevo Estudiante</h2>
-<form action="/estudiantes" method="post">
-    <label for="matricula">Matrícula:</label>
-    <input type="text" id="matricula" name="matricula" required><br>
 
-    <label for="nombre">Nombre:</label>
-    <input type="text" id="nombre" name="nombre" required><br>
+<div class="container">
+    <h2>Nuevo Estudiante</h2>
 
-    <label for="apellido">Apellido:</label>
-    <input type="text" id="apellido" name="apellido" required><br>
+    <form action="/estudiantes" method="post" class="formulario">
+        <label for="matricula">Matrícula:</label>
+        <input type="text" id="matricula" name="matricula" required>
 
-    <label for="telefono">Teléfono:</label>
-    <input type="text" id="telefono" name="telefono" required><br>
+        <label for="nombre">Nombre:</label>
+        <input type="text" id="nombre" name="nombre" required>
 
-    <button type="submit">Guardar</button>
-</form>
+        <label for="apellido">Apellido:</label>
+        <input type="text" id="apellido" name="apellido" required>
+
+        <label for="telefono">Teléfono:</label>
+        <input type="text" id="telefono" name="telefono" required>
+
+        <button type="submit" class="button blue-btn">Guardar</button>
+
+        <!-- Botón para regresar -->
+        <a href="index.html" class="button gray-btn">🔙 Regresar a la Lista</a>
+    </form>
+
+
+
+</div>
+
 </body>
 </html>

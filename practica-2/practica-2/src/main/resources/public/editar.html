@@ -6,22 +6,32 @@
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-<h2>Editar Estudiante</h2>
-<form action="/estudiantes/actualizar" method="post">
-    <label for="matricula">Matrícula:</label>
-    <input type="text" id="matricula" name="matricula" readonly><br>
 
-    <label for="nombre">Nombre:</label>
-    <input type="text" id="nombre" name="nombre" required><br>
+<div class="container">
+    <h2>Editar Estudiante</h2>
 
-    <label for="apellido">Apellido:</label>
-    <input type="text" id="apellido" name="apellido" required><br>
+    <form action="/estudiantes/actualizar" method="post" class="formulario">
+        <label for="matricula">Matrícula:</label>
+        <input type="text" id="matricula" name="matricula" readonly class="readonly">
 
-    <label for="telefono">Teléfono:</label>
-    <input type="text" id="telefono" name="telefono" required><br>
+        <label for="nombre">Nombre:</label>
+        <input type="text" id="nombre" name="nombre" required>
 
-    <button type="submit">Actualizar</button>
-</form>
+        <label for="apellido">Apellido:</label>
+        <input type="text" id="apellido" name="apellido" required>
+
+        <label for="telefono">Teléfono:</label>
+        <input type="text" id="telefono" name="telefono" required>
+
+        <button type="submit" class="button blue-btn">Actualizar</button>
+
+        <!-- Botón para regresar -->
+        <a href="index.html" class="button gray-btn">🔙 Regresar a la Lista</a>
+    </form>
+
+
+
+</div>
 
 <script>
     const params = new URLSearchParams(window.location.search);
@@ -30,5 +40,6 @@
     document.getElementById("apellido").value = params.get("apellido");
     document.getElementById("telefono").value = params.get("telefono");
 </script>
+
 </body>
 </html>

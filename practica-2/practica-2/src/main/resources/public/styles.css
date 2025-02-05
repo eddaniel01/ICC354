@@ -71,3 +71,73 @@ tr:hover {
 .button:hover {
     opacity: 0.8;
 }
+
+/* Estilo para formularios */
+.formulario {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    max-width: 400px;
+    margin: 0 auto;
+}
+
+.formulario label {
+    font-weight: bold;
+    text-align: left;
+}
+
+.formulario input {
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    width: 100%;
+}
+
+.formulario button {
+    width: 100%;
+    margin-top: 10px;
+}
+
+/* Estilos para inputs de solo lectura */
+.readonly {
+    background-color: #e9ecef;
+    cursor: not-allowed;
+}
+
+/* Mejor organización del formulario */
+.formulario {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    max-width: 400px;
+    margin: 0 auto;
+}
+
+.formulario label {
+    font-weight: bold;
+    text-align: left;
+}
+
+.formulario input {
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    width: 100%;
+}
+
+.formulario button {
+    width: 100%;
+    margin-top: 10px;
+}
+
+/* Botón Gris */
+.gray-btn {
+    background-color: #6c757d;
+}
+
+
+
+
+
+
+
