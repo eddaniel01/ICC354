@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Nuevo Estudiante</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<h2>Nuevo Estudiante</h2>
+<form action="/estudiantes" method="post">
+    <label for="matricula">Matrícula:</label>
+    <input type="text" id="matricula" name="matricula" required><br>
+
+    <label for="nombre">Nombre:</label>
+    <input type="text" id="nombre" name="nombre" required><br>
+
+    <label for="apellido">Apellido:</label>
+    <input type="text" id="apellido" name="apellido" required><br>
+
+    <label for="telefono">Teléfono:</label>
+    <input type="text" id="telefono" name="telefono" required><br>
+
+    <button type="submit">Guardar</button>
+</form>
+</body>
+</html>
