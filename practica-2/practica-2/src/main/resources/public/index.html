@@ -6,13 +6,18 @@
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-<h2>Listado de Estudiantes</h2>
-<table id="tabla-estudiantes">
-    <tr>
-        <th>Matrícula</th><th>Nombre</th><th>Apellido</th><th>Teléfono</th><th>Acciones</th>
-    </tr>
-</table>
-<a href="nuevo.html">Nuevo Estudiante</a>
+<div class="container">
+    <h2>Listado de Estudiantes</h2>
+
+    <!-- Botón para agregar un nuevo estudiante -->
+    <a href="nuevo.html" class="button blue-btn">➕ Nuevo Estudiante</a>
+
+    <table id="tabla-estudiantes">
+        <tr>
+            <th>Matrícula</th><th>Nombre</th><th>Apellido</th><th>Teléfono</th><th>Acciones</th>
+        </tr>
+    </table>
+</div>
 
 <script>
     function cargarEstudiantes() {
@@ -20,6 +25,10 @@
             .then(response => response.json())
             .then(data => {
                 let tabla = document.getElementById("tabla-estudiantes");
+                tabla.innerHTML = `<tr>
+                        <th>Matrícula</th><th>Nombre</th><th>Apellido</th><th>Teléfono</th><th>Acciones</th>
+                    </tr>`;  // Reiniciar la tabla
+
                 data.forEach(estudiante => {
                     let fila = tabla.insertRow();
                     fila.innerHTML = `
@@ -28,10 +37,13 @@
                             <td>${estudiante.apellido}</td>
                             <td>${estudiante.telefono}</td>
                             <td>
-                                <a href="editar.html?matricula=${estudiante.matricula}&nombre=${estudiante.nombre}&apellido=${estudiante.apellido}&telefono=${estudiante.telefono}">Editar</a>
+                                <!-- Botón Editar en Azul -->
+                                <a href="editar.html?matricula=${estudiante.matricula}&nombre=${estudiante.nombre}&apellido=${estudiante.apellido}&telefono=${estudiante.telefono}" class="button blue-btn">✏ Editar</a>
+
+                                <!-- Botón Eliminar en Rojo -->
                                 <form action="/estudiantes/eliminar" method="post" style="display:inline;">
                                     <input type="hidden" name="matricula" value="${estudiante.matricula}">
-                                    <button type="submit">Eliminar</button>
+                                    <button type="submit" class="button red-btn">🗑 Eliminar</button>
                                 </form>
                             </td>
                         `;
@@ -40,7 +52,6 @@
             .catch(error => console.error("Error cargando estudiantes:", error));
     }
 
-    // Llamar la función cuando se cargue la página
     cargarEstudiantes();
 </script>
 </body>
