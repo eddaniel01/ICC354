@@ -1,26 +1,29 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
+  <meta charset="UTF-8">
   <title>Formulario de Estudiante</title>
+  <link rel="stylesheet" type="text/css" th:href="@{/styles.css}">
 </head>
 <body>
-<h1 th:text="${estudiante != null and estudiante.id != null ? 'Editar Estudiante' : 'Agregar Estudiante'}"></h1>
 
+<div class="container">
+  <h1 th:text="${estudiante.id == null ? 'Agregar Estudiante' : 'Editar Estudiante'}"></h1>
 
-<form th:action="@{/estudiantes/guardar}" method="post" th:object="${estudiante}">
+  <form th:action="@{/estudiantes/guardar}" method="post" th:object="${estudiante}">
+    <input type="hidden" th:field="*{id}" />
 
-  <!-- ID oculto (Solo para edición, no para creación) -->
-  <input type="hidden" th:field="*{id}" />
+    <label>Matrícula: <input type="text" th:field="*{matricula}" required /></label>
+    <label>Nombre: <input type="text" th:field="*{nombre}" required /></label>
+    <label>Apellido: <input type="text" th:field="*{apellido}" required /></label>
+    <label>Teléfono: <input type="text" th:field="*{telefono}" required /></label>
 
-  <!-- Campo visible para la matrícula -->
-  <label>Matrícula: <input type="text" th:field="*{matricula}" required /></label><br/>
-  <label>Nombre: <input type="text" th:field="*{nombre}" required /></label><br/>
-  <label>Apellido: <input type="text" th:field="*{apellido}" required /></label><br/>
-  <label>Teléfono: <input type="text" th:field="*{telefono}" required /></label><br/>
+    <button type="submit">Guardar</button>
+  </form>
 
-  <button type="submit">Guardar</button>
-</form>
+  <br>
+  <a href="/estudiantes" class="add-button">Volver</a>
+</div>
 
-<a href="/estudiantes">Volver</a>
 </body>
 </html>
