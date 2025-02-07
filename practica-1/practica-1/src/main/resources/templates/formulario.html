@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <title>Formulario de Estudiante</title>
+</head>
+<body>
+<h1 th:text="${estudiante != null and estudiante.id != null ? 'Editar Estudiante' : 'Agregar Estudiante'}"></h1>
+
+
+<form th:action="@{/estudiantes/guardar}" method="post" th:object="${estudiante}">
+
+  <!-- ID oculto (Solo para edición, no para creación) -->
+  <input type="hidden" th:field="*{id}" />
+
+  <!-- Campo visible para la matrícula -->
+  <label>Matrícula: <input type="text" th:field="*{matricula}" required /></label><br/>
+  <label>Nombre: <input type="text" th:field="*{nombre}" required /></label><br/>
+  <label>Apellido: <input type="text" th:field="*{apellido}" required /></label><br/>
+  <label>Teléfono: <input type="text" th:field="*{telefono}" required /></label><br/>
+
+  <button type="submit">Guardar</button>
+</form>
+
+<a href="/estudiantes">Volver</a>
+</body>
+</html>
