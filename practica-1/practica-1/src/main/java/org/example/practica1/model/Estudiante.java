@@ -11,6 +11,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor  // Genera un constructor vacío automáticamente
 @Table(name = "estudiante")
 public class Estudiante {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
