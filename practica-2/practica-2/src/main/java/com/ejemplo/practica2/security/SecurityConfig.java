@@ -37,8 +37,10 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http, JwtAuthenticationFilter jwtAuthenticationFilter) throws Exception {
         http
                 .csrf(csrf -> csrf.disable())
+                .headers(headers -> headers.disable())
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/auth/**").permitAll()  // ✅ Permitir acceso sin autenticación a /auth/login
+                        .requestMatchers("/h2-console/**").permitAll()
                         .requestMatchers("/api/secure-data").authenticated() // 🔒 Proteger el endpoint
                         .anyRequest().authenticated()
                 )
