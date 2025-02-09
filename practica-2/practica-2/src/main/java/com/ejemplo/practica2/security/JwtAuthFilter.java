@@ -1,6 +1,5 @@
 package com.ejemplo.practica2.security;
 
-import com.ejemplo.practica2.security.JwtUtil;
 import com.ejemplo.practica2.service.UsuarioService;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.JwtException;
@@ -14,11 +13,10 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
-
 import java.io.IOException;
 
 @Component
-public class JwtAuthFilter extends OncePerRequestFilter {
+public class JwtAuthFilter extends OncePerRequestFilter {  // ✅ Extiende correctamente
 
     private final JwtUtil jwtUtil;
     private final UsuarioService usuarioService;
@@ -32,7 +30,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain)
             throws ServletException, IOException {
 
-        final String authorizationHeader = request.getHeader("Authorization");
+        String authorizationHeader = request.getHeader("Authorization");
 
         if (authorizationHeader == null || !authorizationHeader.startsWith("Bearer ")) {
             chain.doFilter(request, response);
@@ -58,11 +56,11 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             if (jwtUtil.validateToken(token, userDetails)) {
                 UsernamePasswordAuthenticationToken authToken =
                         new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
-
                 authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                 SecurityContextHolder.getContext().setAuthentication(authToken);
             }
         }
+
         chain.doFilter(request, response);
     }
 }

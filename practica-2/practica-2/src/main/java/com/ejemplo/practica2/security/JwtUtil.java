@@ -1,50 +1,49 @@
 package com.ejemplo.practica2.security;
 
 
-import io.jsonwebtoken.Claims;
-//import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
+import io.jsonwebtoken.security.Keys;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
-import io.jsonwebtoken.*;
 
+import java.nio.charset.StandardCharsets;
+import java.security.Key;
 import java.util.Date;
-import java.util.function.Function;
 
 @Component
 public class JwtUtil {
 
-    private final String SECRET_KEY = "mi_secreto";
+    @Value("${jwt.secret}")
+    private String SECRET_KEY;
 
-    public String generateToken(org.springframework.security.core.userdetails.UserDetails userDetails) {
+    private Key getSigningKey() {
+        return Keys.hmacShaKeyFor(SECRET_KEY.getBytes(StandardCharsets.UTF_8));
+    }
+
+    public String generateToken(UserDetails userDetails) {
         return Jwts.builder()
                 .setSubject(userDetails.getUsername())
                 .setIssuedAt(new Date())
-                .setExpiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60)) // 1 hora
-                .signWith(SignatureAlgorithm.HS256, SECRET_KEY)
+                .setExpiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60))
+                .signWith(getSigningKey(), SignatureAlgorithm.HS256)
                 .compact();
     }
 
-    public boolean validateToken(String token, org.springframework.security.core.userdetails.UserDetails userDetails) {
-        return extractUsername(token).equals(userDetails.getUsername()) && !isTokenExpired(token);
-    }
-
     public String extractUsername(String token) {
-        return extractClaim(token, Claims::getSubject);
-    }
-
-    public <T> T extractClaim(String token, Function<Claims, T> claimsResolver) {
-        final Claims claims = Jwts.parserBuilder()
-                .setSigningKey(SECRET_KEY) // Nuevo método
-                .build() // Se debe construir antes de parsear
+        return Jwts.parserBuilder()
+                .setSigningKey(getSigningKey())
+                .build()
                 .parseClaimsJws(token)
-                .getBody();
-        return claimsResolver.apply(claims);
+                .getBody()
+                .getSubject();
     }
 
-    public boolean isTokenExpired(String token) {
-        return extractClaim(token, Claims::getExpiration).before(new Date());
+    public boolean validateToken(String token, UserDetails userDetails) {
+        return extractUsername(token).equals(userDetails.getUsername());
     }
 
     public String encodePassword(String password) {
