@@ -19,10 +19,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private final JwtUtil jwtUtil;
     private final CustomUserDetailsService customUserDetailsService; // 👈 Usamos nuestra clase separada
 
+
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain)
             throws ServletException, IOException {
-
         String token = request.getHeader("Authorization");
 
         if (token != null && token.startsWith("Bearer ")) {
@@ -31,7 +31,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
             if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
                 UserDetails userDetails = customUserDetailsService.loadUserByUsername(username);
-                if (jwtUtil.validateToken(token)) {
+                if (jwtUtil.validateToken(token, userDetails)) { // ✅ Aquí se valida el token
                     SecurityContextHolder.getContext().setAuthentication(
                             new org.springframework.security.authentication.UsernamePasswordAuthenticationToken(
                                     userDetails, null, userDetails.getAuthorities()
@@ -42,4 +42,5 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         }
         chain.doFilter(request, response);
     }
+
 }

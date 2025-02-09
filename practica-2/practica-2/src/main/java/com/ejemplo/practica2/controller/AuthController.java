@@ -24,4 +24,5 @@ public class AuthController {
         String token = authService.authenticateUser(request.get("username"), request.get("password"));
         return ResponseEntity.ok(Map.of("token", token));
     }
+
 }
