@@ -8,7 +8,7 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
-@Service  // 👈 Esto lo registra como un bean en Spring
+@Service
 @RequiredArgsConstructor
 public class CustomUserDetailsService implements UserDetailsService {
 
@@ -23,10 +23,9 @@ public class CustomUserDetailsService implements UserDetailsService {
                 .username(user.getUsername())
                 .password(user.getPassword())
                 .authorities(user.getRoles().stream()
-                        .map(role -> "ROLE_" + role.toUpperCase()) // ✅ Asegura que los roles sean compatibles
+                        .map(role -> "ROLE_" + role.getName().toUpperCase())
                         .map(org.springframework.security.core.authority.SimpleGrantedAuthority::new)
                         .toList())
                 .build();
-
     }
 }

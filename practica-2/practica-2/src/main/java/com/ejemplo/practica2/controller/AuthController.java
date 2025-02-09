@@ -3,6 +3,7 @@ package com.ejemplo.practica2.controller;
 import com.ejemplo.practica2.service.AuthService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
@@ -13,6 +14,7 @@ import java.util.Map;
 public class AuthController {
     private final AuthService authService;
 
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/register")
     public ResponseEntity<Map<String, String>> register(@RequestBody Map<String, String> request) {
         String token = authService.registerUser(request.get("username"), request.get("password"), Boolean.parseBoolean(request.get("isAdmin")));
