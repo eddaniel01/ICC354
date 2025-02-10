@@ -39,9 +39,11 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .headers(headers -> headers.disable())
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/auth/**").permitAll()  // ✅ Permitir acceso sin autenticación a /auth/login
+                        .requestMatchers("/auth/**").permitAll()
                         .requestMatchers("/h2-console/**").permitAll()
-                        .requestMatchers("/api/secure-data").authenticated() // 🔒 Proteger el endpoint
+                        .requestMatchers("/api/secure-data").authenticated()
+                        .requestMatchers("/api/mocks/**").authenticated()
+                        .requestMatchers("/mock/**").permitAll()
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
