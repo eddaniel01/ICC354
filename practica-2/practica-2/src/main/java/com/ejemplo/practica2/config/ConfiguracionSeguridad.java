@@ -122,25 +122,21 @@ public class ConfiguracionSeguridad {
      * @throws Exception
      */
     @Bean
-    @Order(1) //indica el orden del bean en inicializar
+    @Order(1) // indicates the initialization order
     public SecurityFilterChain securityFilterApi(HttpSecurity http) throws Exception {
-        return http
+        http
                 .securityMatcher("/mock/jwt/**")
                 .csrf(AbstractHttpConfigurer::disable)
-                .authorizeHttpRequests( authorization -> {
-                    try {
-                        authorization
-                                .requestMatchers(AntPathRequestMatcher.antMatcher("/mock/jwt/**")).authenticated()
-                                .and().sessionManagement()
-                                .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-                                .and()
-                                .authenticationProvider(authenticationProvider())
-                                .addFilterBefore(jwtAutorizacionFilter, UsernamePasswordAuthenticationFilter.class);
-                    } catch (Exception e) {
-                        throw new RuntimeException(e);
-                    }
-                })
-                .build();
+                .authorizeHttpRequests(auth -> auth
+                        .requestMatchers(AntPathRequestMatcher.antMatcher("/mock/jwt/**")).authenticated()
+                )
+                .sessionManagement(session -> session
+                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+                )
+                .authenticationProvider(authenticationProvider())
+                .addFilterBefore(jwtAutorizacionFilter, UsernamePasswordAuthenticationFilter.class);
+
+        return http.build();
     }
 
     /**
@@ -155,28 +151,29 @@ public class ConfiguracionSeguridad {
      */
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http, MvcRequestMatcher.Builder mvc) throws Exception {
-        http.authorizeHttpRequests(authorization ->
-                        authorization
-                                .requestMatchers(AntPathRequestMatcher.antMatcher("/")).hasAnyRole("ADMIN", "USER") //permitiendo llamadas a esas urls.
-                                .requestMatchers(mvc.pattern("/h2-console/**")).permitAll()
-                                .requestMatchers(AntPathRequestMatcher.antMatcher("/admin/**")).hasRole("ADMIN")
-                                .requestMatchers(AntPathRequestMatcher.antMatcher("/user/**")).hasRole("USER") //hasAnyRole("ADMIN", "USER")
-                                .requestMatchers(AntPathRequestMatcher.antMatcher("/logout")).hasAnyRole("ADMIN", "USER")
-                                .requestMatchers(AntPathRequestMatcher.antMatcher("/logout")).permitAll()
-                                .requestMatchers(AntPathRequestMatcher.antMatcher("/mock/**")).permitAll()
-                                .anyRequest().authenticated() //cualquier llamada debe ser validada
+        http
+                .authorizeHttpRequests(auth -> auth
+                        .requestMatchers(AntPathRequestMatcher.antMatcher("/")).hasAnyRole("ADMIN", "USER")
+                        .requestMatchers(mvc.pattern("/h2-console/**")).permitAll()
+                        .requestMatchers(AntPathRequestMatcher.antMatcher("/admin/**")).hasRole("ADMIN")
+                        .requestMatchers(AntPathRequestMatcher.antMatcher("/user/**")).hasRole("USER")
+                        .requestMatchers(AntPathRequestMatcher.antMatcher("/logout")).permitAll()
+                        .requestMatchers(AntPathRequestMatcher.antMatcher("/mock/**")).permitAll()
+                        .anyRequest().authenticated()
                 )
-                .formLogin((form) -> form
-                        .loginPage("/login") //indicando la ruta que estaremos utilizando.
-                        .failureUrl("/login?error") //en caso de fallar puedo indicar otra pagina.
+                .formLogin(form -> form
+                        .loginPage("/login")
+                        .failureUrl("/login?error")
                         .defaultSuccessUrl("/")
                         .permitAll()
                 )
-                .logout((logout) -> logout
+                .logout(logout -> logout
                         .logoutSuccessUrl("/login")
                         .invalidateHttpSession(true)
                         .logoutRequestMatcher(AntPathRequestMatcher.antMatcher("/logout"))
-                        .permitAll());
+                        .permitAll()
+                );
+
         return http.build();
     }
 
