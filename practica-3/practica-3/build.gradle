@@ -1,0 +1,56 @@
+plugins {
+    id 'java'
+    id 'org.springframework.boot' version '3.4.2'
+    id 'io.spring.dependency-management' version '1.1.7'
+    id 'application'
+}
+
+group = 'org.example'
+version = '0.0.1-SNAPSHOT'
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(21)
+    }
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation 'org.springframework.boot:spring-boot-starter'
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+
+    // Spring Boot Web para manejar peticiones HTTP y vistas con Thymeleaf
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+
+    // Spring Boot Thymeleaf para la integración con la vista
+    implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
+
+    // Spring Boot Data JPA para la interacción con la base de datos
+    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+
+    // Base de datos en memoria H2
+    runtimeOnly 'com.h2database:h2'
+
+    // Lombok para reducir el código boilerplate en las entidades y servicios
+    implementation 'org.projectlombok:lombok'
+    annotationProcessor 'org.projectlombok:lombok'
+
+    // Dependencias de desarrollo y testing
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+}
+
+tasks.named('test') {
+    useJUnitPlatform()
+}
+
+bootJar {
+    archiveFileName = "app.jar"
+}
+
+jar {
+    enabled = true
+}

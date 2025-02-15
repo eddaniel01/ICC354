@@ -1,16 +1,17 @@
-package org.example.practica1.controller;
+package com.ejemplo.practica3.controller;
 
-import org.example.practica1.model.Estudiante;
-import org.example.practica1.service.EstudianteService;
+import com.ejemplo.practica3.model.Estudiante;
+import com.ejemplo.practica3.service.EstudianteService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
+
 import java.util.List;
 import java.util.Optional;
 
 @Controller
-@RequestMapping("")
+@RequestMapping("/estudiantes")
 public class EstudianteController {
 
     @Autowired
