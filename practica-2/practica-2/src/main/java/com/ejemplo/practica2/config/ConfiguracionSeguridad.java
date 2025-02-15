@@ -121,6 +121,7 @@ public class ConfiguracionSeguridad {
      * @return
      * @throws Exception
      */
+
     @Bean
     @Order(1) // indicates the initialization order
     public SecurityFilterChain securityFilterApi(HttpSecurity http) throws Exception {
