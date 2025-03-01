@@ -29,40 +29,26 @@
             color: #ffa726;
         }
 
-        h2 {
-            font-size: 22px;
-            color: #29b6f6;
-            margin-bottom: 10px;
-        }
-
         .chart-container {
             display: flex;
-            justify-content: center;
-            gap: 15px;  /* 🔹 Reduce la separación entre gráficos */
             flex-wrap: wrap;
+            justify-content: center;
+            gap: 20px;
             margin-top: 20px;
         }
 
         .chart-box {
-            background: #1b1e24; /* 🔹 Color más oscuro para mejor contraste */
+            background: #1b1e24;
             padding: 20px;
             border-radius: 10px;
             box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.5);
-            width: 80%;  /* 🔹 Aumenta el ancho de los gráficos */
+            width: 40%;
             min-width: 450px;
-            max-width: 900px; /* 🔹 Permite un tamaño más grande */
         }
 
         .chart-box canvas {
             width: 100% !important;
-            height: 600px !important; /* 🔹 Aumenta la altura del gráfico */
-        }
-
-
-        @media (max-width: 800px) {
-            .chart-box {
-                width: 90%;
-            }
+            height: 400px !important;
         }
     </style>
 </head>
@@ -70,99 +56,130 @@
 
 <h1>📊 Datos de Sensores en Tiempo Real</h1>
 
-<div class="chart-container">
-    <div class="chart-box">
-        <h2>🌡 Temperatura</h2>
-        <canvas id="temperaturaChart"></canvas>
-    </div>
-    <div class="chart-box">
-        <h2>💧 Humedad</h2>
-        <canvas id="humedadChart"></canvas>
-    </div>
-</div>
+<div id="graficos" class="chart-container"></div>
 
 <script>
     Chart.register('chartjs-adapter-luxon');
 
-    const ctxTemp = document.getElementById('temperaturaChart').getContext('2d');
-    const ctxHum = document.getElementById('humedadChart').getContext('2d');
-
-    const temperaturaChart = new Chart(ctxTemp, {
-        type: 'line',
-        data: { labels: [], datasets: [{ label: 'Temperatura', data: [], borderColor: '#ff7043', backgroundColor: 'rgba(255, 112, 67, 0.2)', fill: true }] },
-        options: {
-            responsive: true,
-            maintainAspectRatio: true,  // 🔹 SOLUCIÓN: Mantener el aspecto
-            scales: {
-                x: {
-                    type: 'time',
-                    time: {
-                        unit: 'minute',
-                        tooltipFormat: 'dd/MM/yyyy HH:mm:ss'
-                    },
-                    title: { display: true, text: 'Tiempo', color: '#ffffff' }
-                },
-                y: {
-                    beginAtZero: true,
-                    title: { display: true, text: 'Temperatura (°C)', color: '#ffffff' }
-                }
-            },
-            plugins: {
-                legend: { labels: { color: '#ffffff' } }
-            }
-        }
+    document.addEventListener("DOMContentLoaded", function () {
+        console.log("✅ DOM completamente cargado. Iniciando WebSockets...");
+        iniciarWebSocket();
     });
 
-    const humedadChart = new Chart(ctxHum, {
-        type: 'line',
-        data: { labels: [], datasets: [{ label: 'Humedad', data: [], borderColor: '#42a5f5', backgroundColor: 'rgba(66, 165, 245, 0.2)', fill: true }] },
-        options: {
-            responsive: true,
-            maintainAspectRatio: true,  // 🔹 SOLUCIÓN: Mantener el aspecto
-            scales: {
-                x: {
-                    type: 'time',
-                    time: {
-                        unit: 'minute',
-                        tooltipFormat: 'dd/MM/yyyy HH:mm:ss'
-                    },
-                    title: { display: true, text: 'Tiempo', color: '#ffffff' }
-                },
-                y: {
-                    beginAtZero: true,
-                    title: { display: true, text: 'Humedad (%)', color: '#ffffff' }
-                }
-            },
-            plugins: {
-                legend: { labels: { color: '#ffffff' } }
-            }
+    const sensores = {}; // Objeto para almacenar gráficos por sensor
+
+    function crearGrafico(sensorId, tipo) {
+        if (!sensorId) {
+            console.error("⚠️ ID de sensor inválido:", sensorId);
+            return;
         }
-    });
 
-    // Configurar WebSockets con STOMP
-    const socket = new SockJS('/ws');
-    const stompClient = Stomp.over(socket);
+        const chartId = `sensor-${sensorId}-${tipo}`;
+        if (document.getElementById(chartId)) return; // Evitar duplicados
 
-    stompClient.connect({}, function (frame) {
-        console.log("📡 Conectado a WebSocket!");
+        let container = document.getElementById("graficos");
+        if (!container) {
+            console.error("⚠️ ERROR: No se encontró el contenedor de gráficos en el DOM.");
+            return;
+        }
 
-        stompClient.subscribe('/topic/datos', function (message) {
-            const data = JSON.parse(message.body);
+        // Crear el contenedor del gráfico
+        const div = document.createElement('div');
+        div.classList.add('chart-box');
+        div.innerHTML = `<h2>Sensor ${sensorId} - ${tipo.charAt(0).toUpperCase() + tipo.slice(1)}</h2>
+                         <canvas id="${chartId}"></canvas>`;
+        container.appendChild(div);
 
-            const fecha = luxon.DateTime.fromFormat(data.fechaGeneracion, "dd/MM/yyyy HH:mm:ss").toJSDate();
-
-            temperaturaChart.data.labels.push(fecha);
-            temperaturaChart.data.datasets[0].data.push(data.temperatura);
-            temperaturaChart.update();
-
-            humedadChart.data.labels.push(fecha);
-            humedadChart.data.datasets[0].data.push(data.humedad);
-            humedadChart.update();
-
-            console.log("📩 Datos recibidos y graficados:", data);
+        // Configuración del gráfico
+        const ctx = document.getElementById(chartId).getContext('2d');
+        sensores[chartId] = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: [],
+                datasets: [{
+                    label: tipo === 'temperatura' ? 'Temperatura (°C)' : 'Humedad (%)',
+                    data: [],
+                    borderColor: tipo === 'temperatura' ? '#ff7043' : '#42a5f5',
+                    backgroundColor: tipo === 'temperatura' ? 'rgba(255, 112, 67, 0.2)' : 'rgba(66, 165, 245, 0.2)',
+                    fill: true
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    x: {
+                        type: 'time',
+                        time: {
+                            unit: 'minute',
+                            tooltipFormat: 'dd/MM/yyyy HH:mm:ss'
+                        },
+                        title: { display: true, text: 'Tiempo', color: '#ffffff' }
+                    },
+                    y: {
+                        beginAtZero: true,
+                        title: { display: true, text: tipo === 'temperatura' ? 'Temperatura (°C)' : 'Humedad (%)', color: '#ffffff' }
+                    }
+                },
+                plugins: {
+                    legend: { labels: { color: '#ffffff' } }
+                }
+            }
         });
-    });
+    }
+
+    function iniciarWebSocket() {
+        const socket = new SockJS('/ws');
+        const stompClient = Stomp.over(socket);
+
+        stompClient.connect({}, function () {
+            console.log("📡 Conectado a WebSocket!");
+
+            stompClient.subscribe('/topic/datos', function (message) {
+                try {
+                    console.log("📩 Mensaje recibido:", message.body);
+                    const data = JSON.parse(message.body);
+
+                    // Verificar si los datos tienen las propiedades necesarias
+                    if (!data.idDispositivo || !data.temperatura || !data.humedad) {
+                        console.error("⚠️ Error: Datos de sensor incompletos", data);
+                        return;
+                    }
+
+                    const fecha = luxon.DateTime.fromFormat(data.fechaGeneracion, "dd/MM/yyyy HH:mm:ss").toJSDate();
+
+                    let container = document.getElementById("graficos");
+                    if (!container) {
+                        console.error("⚠️ ERROR: No se encontró el contenedor de gráficos en el DOM.");
+                        return;
+                    }
+
+                    // Crear gráficos si no existen
+                    crearGrafico(data.idDispositivo, 'temperatura');
+                    crearGrafico(data.idDispositivo, 'humedad');
+
+                    // Obtener gráficos creados
+                    const tempChart = sensores[`sensor-${data.idDispositivo}-temperatura`];
+                    const humChart = sensores[`sensor-${data.idDispositivo}-humedad`];
+
+                    if (tempChart && humChart) {
+                        tempChart.data.labels.push(fecha);
+                        tempChart.data.datasets[0].data.push(data.temperatura);
+                        tempChart.update();
+
+                        humChart.data.labels.push(fecha);
+                        humChart.data.datasets[0].data.push(data.humedad);
+                        humChart.update();
+                    } else {
+                        console.error("⚠️ No se encontraron gráficos para el sensor", data.idDispositivo);
+                    }
+                } catch (error) {
+                    console.error("❌ Error procesando mensaje WebSocket:", error);
+                }
+            });
+        });
+    }
 </script>
+
 
 </body>
 </html>
