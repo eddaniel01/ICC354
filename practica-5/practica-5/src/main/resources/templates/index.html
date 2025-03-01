@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Gráficos en Tiempo Real</title>
+
+    <!-- Librerías necesarias -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1"></script>
+    <script src="https://cdn.jsdelivr.net/npm/luxon@3.4.3/build/global/luxon.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-luxon@1.3.0"></script>
+
+    <!-- Librerías de WebSockets -->
+    <script src="https://cdn.jsdelivr.net/npm/sockjs-client/dist/sockjs.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/stompjs/lib/stomp.min.js"></script>
+</head>
+<body>
+
+<h1>Datos de Sensores en Tiempo Real</h1>
+
+<h2>Temperatura</h2>
+<canvas id="temperaturaChart" width="800" height="400"></canvas>
+
+<h2>Humedad</h2>
+<canvas id="humedadChart" width="800" height="400"></canvas>
+
+<script>
+    Chart.register('chartjs-adapter-luxon');
+
+    const ctxTemp = document.getElementById('temperaturaChart').getContext('2d');
+    const ctxHum = document.getElementById('humedadChart').getContext('2d');
+
+    const temperaturaChart = new Chart(ctxTemp, {
+        type: 'line',
+        data: { labels: [], datasets: [{ label: 'Temperatura', data: [], borderColor: 'red', fill: false }] },
+        options: {
+            responsive: true,
+            scales: {
+                x: {
+                    type: 'time',
+                    time: {
+                        unit: 'minute',
+                        tooltipFormat: 'dd/MM/yyyy HH:mm:ss'
+                    },
+                    adapters: {
+                        date: {
+                            type: 'luxon'
+                        }
+                    },
+                    title: { display: true, text: 'Tiempo' }
+                },
+                y: {
+                    beginAtZero: true,
+                    title: { display: true, text: 'Temperatura (°C)' }
+                }
+            }
+        }
+    });
+
+
+    const humedadChart = new Chart(ctxHum, {
+        type: 'line',
+        data: { labels: [], datasets: [{ label: 'Humedad', data: [], borderColor: 'blue', fill: false }] },
+        options: {
+            responsive: true,
+            scales: {
+                x: {
+                    type: 'time',
+                    time: {
+                        unit: 'minute',
+                        tooltipFormat: 'dd/MM/yyyy HH:mm:ss'
+                    },
+                    title: { display: true, text: 'Tiempo' }
+                },
+                y: {
+                    beginAtZero: true,
+                    title: { display: true, text: 'Humedad (%)' }
+                }
+            }
+        }
+    });
+
+    // Configurar WebSockets con STOMP
+    const socket = new SockJS('/ws');
+    const stompClient = Stomp.over(socket);
+
+    stompClient.connect({}, function (frame) {
+        console.log("📡 Conectado a WebSocket!");
+
+        stompClient.subscribe('/topic/datos', function (message) {
+            const data = JSON.parse(message.body);
+
+            // Convertir fecha a formato adecuado para Chart.js
+            const fecha = luxon.DateTime.fromFormat(data.fechaGeneracion, "dd/MM/yyyy HH:mm:ss").toJSDate();
+
+            // Agregar datos a los gráficos
+            temperaturaChart.data.labels.push(fecha);
+            temperaturaChart.data.datasets[0].data.push(data.temperatura);
+            temperaturaChart.update();
+
+            humedadChart.data.labels.push(fecha);
+            humedadChart.data.datasets[0].data.push(data.humedad);
+            humedadChart.update();
+
+            console.log("📩 Datos recibidos y graficados:", data);
+        });
+    });
+</script>
+
+</body>
+</html>
