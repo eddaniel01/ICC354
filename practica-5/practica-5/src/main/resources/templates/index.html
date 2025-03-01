@@ -8,20 +8,78 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1"></script>
     <script src="https://cdn.jsdelivr.net/npm/luxon@3.4.3/build/global/luxon.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-luxon@1.3.0"></script>
-
-    <!-- Librerías de WebSockets -->
     <script src="https://cdn.jsdelivr.net/npm/sockjs-client/dist/sockjs.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/stompjs/lib/stomp.min.js"></script>
+
+    <style>
+        body {
+            background: linear-gradient(135deg, #121212, #1e1e1e);
+            color: #ffffff;
+            font-family: 'Poppins', sans-serif;
+            text-align: center;
+            margin: 0;
+            padding: 20px;
+        }
+
+        h1 {
+            font-size: 28px;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #ffa726;
+        }
+
+        h2 {
+            font-size: 22px;
+            color: #29b6f6;
+            margin-bottom: 10px;
+        }
+
+        .chart-container {
+            display: flex;
+            justify-content: center;
+            gap: 15px;  /* 🔹 Reduce la separación entre gráficos */
+            flex-wrap: wrap;
+            margin-top: 20px;
+        }
+
+        .chart-box {
+            background: #1b1e24; /* 🔹 Color más oscuro para mejor contraste */
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.5);
+            width: 80%;  /* 🔹 Aumenta el ancho de los gráficos */
+            min-width: 450px;
+            max-width: 900px; /* 🔹 Permite un tamaño más grande */
+        }
+
+        .chart-box canvas {
+            width: 100% !important;
+            height: 600px !important; /* 🔹 Aumenta la altura del gráfico */
+        }
+
+
+        @media (max-width: 800px) {
+            .chart-box {
+                width: 90%;
+            }
+        }
+    </style>
 </head>
 <body>
 
-<h1>Datos de Sensores en Tiempo Real</h1>
+<h1>📊 Datos de Sensores en Tiempo Real</h1>
 
-<h2>Temperatura</h2>
-<canvas id="temperaturaChart" width="800" height="400"></canvas>
-
-<h2>Humedad</h2>
-<canvas id="humedadChart" width="800" height="400"></canvas>
+<div class="chart-container">
+    <div class="chart-box">
+        <h2>🌡 Temperatura</h2>
+        <canvas id="temperaturaChart"></canvas>
+    </div>
+    <div class="chart-box">
+        <h2>💧 Humedad</h2>
+        <canvas id="humedadChart"></canvas>
+    </div>
+</div>
 
 <script>
     Chart.register('chartjs-adapter-luxon');
@@ -31,9 +89,10 @@
 
     const temperaturaChart = new Chart(ctxTemp, {
         type: 'line',
-        data: { labels: [], datasets: [{ label: 'Temperatura', data: [], borderColor: 'red', fill: false }] },
+        data: { labels: [], datasets: [{ label: 'Temperatura', data: [], borderColor: '#ff7043', backgroundColor: 'rgba(255, 112, 67, 0.2)', fill: true }] },
         options: {
             responsive: true,
+            maintainAspectRatio: true,  // 🔹 SOLUCIÓN: Mantener el aspecto
             scales: {
                 x: {
                     type: 'time',
@@ -41,27 +100,25 @@
                         unit: 'minute',
                         tooltipFormat: 'dd/MM/yyyy HH:mm:ss'
                     },
-                    adapters: {
-                        date: {
-                            type: 'luxon'
-                        }
-                    },
-                    title: { display: true, text: 'Tiempo' }
+                    title: { display: true, text: 'Tiempo', color: '#ffffff' }
                 },
                 y: {
                     beginAtZero: true,
-                    title: { display: true, text: 'Temperatura (°C)' }
+                    title: { display: true, text: 'Temperatura (°C)', color: '#ffffff' }
                 }
+            },
+            plugins: {
+                legend: { labels: { color: '#ffffff' } }
             }
         }
     });
 
-
     const humedadChart = new Chart(ctxHum, {
         type: 'line',
-        data: { labels: [], datasets: [{ label: 'Humedad', data: [], borderColor: 'blue', fill: false }] },
+        data: { labels: [], datasets: [{ label: 'Humedad', data: [], borderColor: '#42a5f5', backgroundColor: 'rgba(66, 165, 245, 0.2)', fill: true }] },
         options: {
             responsive: true,
+            maintainAspectRatio: true,  // 🔹 SOLUCIÓN: Mantener el aspecto
             scales: {
                 x: {
                     type: 'time',
@@ -69,12 +126,15 @@
                         unit: 'minute',
                         tooltipFormat: 'dd/MM/yyyy HH:mm:ss'
                     },
-                    title: { display: true, text: 'Tiempo' }
+                    title: { display: true, text: 'Tiempo', color: '#ffffff' }
                 },
                 y: {
                     beginAtZero: true,
-                    title: { display: true, text: 'Humedad (%)' }
+                    title: { display: true, text: 'Humedad (%)', color: '#ffffff' }
                 }
+            },
+            plugins: {
+                legend: { labels: { color: '#ffffff' } }
             }
         }
     });
@@ -89,10 +149,8 @@
         stompClient.subscribe('/topic/datos', function (message) {
             const data = JSON.parse(message.body);
 
-            // Convertir fecha a formato adecuado para Chart.js
             const fecha = luxon.DateTime.fromFormat(data.fechaGeneracion, "dd/MM/yyyy HH:mm:ss").toJSDate();
 
-            // Agregar datos a los gráficos
             temperaturaChart.data.labels.push(fecha);
             temperaturaChart.data.datasets[0].data.push(data.temperatura);
             temperaturaChart.update();
