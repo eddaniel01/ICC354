@@ -6,4 +6,5 @@ import java.util.List;
 public interface SensorDataService {
     List<SensorData> findAllByIdDispositivo(int idDispositivo);
     SensorData save(SensorData sensorData);
+    List<SensorData> findTop10ByIdDispositivoOrderByFechaGeneracionDesc(int idDispositivo);
 }

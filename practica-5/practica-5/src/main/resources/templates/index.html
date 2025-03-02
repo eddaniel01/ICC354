@@ -61,38 +61,64 @@
 <script>
     Chart.register('chartjs-adapter-luxon');
 
-    document.addEventListener("DOMContentLoaded", function () {
-        console.log("✅ DOM completamente cargado. Iniciando WebSockets...");
+    document.addEventListener("DOMContentLoaded", async function () {
+        console.log("✅ DOM completamente cargado. Iniciando carga de datos...");
+
+        await cargarDatosHistoricos(1);
+        await cargarDatosHistoricos(2);
+
         iniciarWebSocket();
     });
 
     const sensores = {}; // Objeto para almacenar gráficos por sensor
 
+    async function cargarDatosHistoricos(sensorId) {
+        try {
+            console.log(`📂 Cargando datos históricos para el Sensor ${sensorId}...`);
+
+            const response = await fetch(`/api/sensores/historico/${sensorId}`);
+            const data = await response.json();
+
+            if (data.length === 0) {
+                console.log(`⚠️ No hay datos históricos para el Sensor ${sensorId}`);
+                return;
+            }
+
+            const tempChart = crearGrafico(sensorId, 'temperatura');
+            const humChart = crearGrafico(sensorId, 'humedad');
+
+            data.reverse().forEach(sensorData => {
+                const fecha = luxon.DateTime.fromFormat(sensorData.fechaGeneracion, "dd/MM/yyyy HH:mm:ss").toJSDate();
+
+                tempChart.data.labels.push(fecha);
+                tempChart.data.datasets[0].data.push(sensorData.temperatura);
+
+                humChart.data.labels.push(fecha);
+                humChart.data.datasets[0].data.push(sensorData.humedad);
+            });
+
+            tempChart.update();
+            humChart.update();
+
+            console.log(`✅ Datos históricos cargados en gráficos.`);
+        } catch (error) {
+            console.error("❌ Error cargando datos históricos:", error);
+        }
+    }
+
     function crearGrafico(sensorId, tipo) {
-        if (!sensorId) {
-            console.error("⚠️ ID de sensor inválido:", sensorId);
-            return;
-        }
-
         const chartId = `sensor-${sensorId}-${tipo}`;
-        if (document.getElementById(chartId)) return; // Evitar duplicados
 
-        let container = document.getElementById("graficos");
-        if (!container) {
-            console.error("⚠️ ERROR: No se encontró el contenedor de gráficos en el DOM.");
-            return;
-        }
+        if (sensores[chartId]) return sensores[chartId];
 
-        // Crear el contenedor del gráfico
         const div = document.createElement('div');
         div.classList.add('chart-box');
         div.innerHTML = `<h2>Sensor ${sensorId} - ${tipo.charAt(0).toUpperCase() + tipo.slice(1)}</h2>
                          <canvas id="${chartId}"></canvas>`;
-        container.appendChild(div);
+        document.getElementById("graficos").appendChild(div);
 
-        // Configuración del gráfico
         const ctx = document.getElementById(chartId).getContext('2d');
-        sensores[chartId] = new Chart(ctx, {
+        const chart = new Chart(ctx, {
             type: 'line',
             data: {
                 labels: [],
@@ -107,24 +133,14 @@
             options: {
                 responsive: true,
                 scales: {
-                    x: {
-                        type: 'time',
-                        time: {
-                            unit: 'minute',
-                            tooltipFormat: 'dd/MM/yyyy HH:mm:ss'
-                        },
-                        title: { display: true, text: 'Tiempo', color: '#ffffff' }
-                    },
-                    y: {
-                        beginAtZero: true,
-                        title: { display: true, text: tipo === 'temperatura' ? 'Temperatura (°C)' : 'Humedad (%)', color: '#ffffff' }
-                    }
-                },
-                plugins: {
-                    legend: { labels: { color: '#ffffff' } }
+                    x: { type: 'time', time: { unit: 'minute', tooltipFormat: 'dd/MM/yyyy HH:mm:ss' } },
+                    y: { beginAtZero: true }
                 }
             }
         });
+
+        sensores[chartId] = chart;
+        return chart;
     }
 
     function iniciarWebSocket() {
@@ -136,50 +152,34 @@
 
             stompClient.subscribe('/topic/datos', function (message) {
                 try {
-                    console.log("📩 Mensaje recibido:", message.body);
                     const data = JSON.parse(message.body);
 
-                    // Verificar si los datos tienen las propiedades necesarias
-                    if (!data.idDispositivo || !data.temperatura || !data.humedad) {
-                        console.error("⚠️ Error: Datos de sensor incompletos", data);
-                        return;
-                    }
+                    // Asegurarse de que el gráfico existe antes de agregar datos
+                    const tempChart = crearGrafico(data.idDispositivo, 'temperatura');
+                    const humChart = crearGrafico(data.idDispositivo, 'humedad');
 
                     const fecha = luxon.DateTime.fromFormat(data.fechaGeneracion, "dd/MM/yyyy HH:mm:ss").toJSDate();
 
-                    let container = document.getElementById("graficos");
-                    if (!container) {
-                        console.error("⚠️ ERROR: No se encontró el contenedor de gráficos en el DOM.");
-                        return;
-                    }
+                    tempChart.data.labels.push(fecha);
+                    tempChart.data.datasets[0].data.push(data.temperatura);
+                    tempChart.update();
 
-                    // Crear gráficos si no existen
-                    crearGrafico(data.idDispositivo, 'temperatura');
-                    crearGrafico(data.idDispositivo, 'humedad');
+                    humChart.data.labels.push(fecha);
+                    humChart.data.datasets[0].data.push(data.humedad);
+                    humChart.update();
 
-                    // Obtener gráficos creados
-                    const tempChart = sensores[`sensor-${data.idDispositivo}-temperatura`];
-                    const humChart = sensores[`sensor-${data.idDispositivo}-humedad`];
-
-                    if (tempChart && humChart) {
-                        tempChart.data.labels.push(fecha);
-                        tempChart.data.datasets[0].data.push(data.temperatura);
-                        tempChart.update();
-
-                        humChart.data.labels.push(fecha);
-                        humChart.data.datasets[0].data.push(data.humedad);
-                        humChart.update();
-                    } else {
-                        console.error("⚠️ No se encontraron gráficos para el sensor", data.idDispositivo);
-                    }
                 } catch (error) {
                     console.error("❌ Error procesando mensaje WebSocket:", error);
                 }
             });
+
+            console.log("✅ WebSocket listo para recibir datos.");
+        }, function () {
+            console.error("❌ Conexión perdida. Reintentando en 5 segundos...");
+            setTimeout(iniciarWebSocket, 5000);
         });
     }
 </script>
-
 
 </body>
 </html>
