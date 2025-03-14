@@ -22,6 +22,7 @@ public class MyBeansConfig {
         return localeResolver;
     }
 
+
     @Bean
     public LocaleChangeInterceptor localeChangeInterceptor() {
         LocaleChangeInterceptor localeChangeInterceptor = new LocaleChangeInterceptor();
