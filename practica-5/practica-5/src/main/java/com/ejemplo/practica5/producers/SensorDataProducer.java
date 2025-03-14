@@ -12,7 +12,6 @@ public class SensorDataProducer {
     public SensorDataProducer(JmsTemplate jmsTemplate) {
         this.jmsTemplate = jmsTemplate;
     }
-
     public void enviarMensaje(SensorData sensorData) {
         jmsTemplate.convertAndSend("notificacion_sensores", sensorData.toString());
         System.out.println("Mensaje enviado a ActiveMQ: " + sensorData);
