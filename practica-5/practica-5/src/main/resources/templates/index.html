@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Gráficos en Tiempo Real</title>
+
+    <!-- Librerías necesarias -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1"></script>
+    <script src="https://cdn.jsdelivr.net/npm/luxon@3.4.3/build/global/luxon.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-luxon@1.3.0"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sockjs-client/dist/sockjs.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/stompjs/lib/stomp.min.js"></script>
+
+    <style>
+        body {
+            background: linear-gradient(135deg, #121212, #1e1e1e);
+            color: #ffffff;
+            font-family: 'Poppins', sans-serif;
+            text-align: center;
+            margin: 0;
+            padding: 20px;
+        }
+
+        h1 {
+            font-size: 28px;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #ffa726;
+        }
+
+        .chart-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .chart-box {
+            background: #1b1e24;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.5);
+            width: 40%;
+            min-width: 450px;
+        }
+
+        .chart-box canvas {
+            width: 100% !important;
+            height: 400px !important;
+        }
+    </style>
+</head>
+<body>
+
+<h1>📊 Datos de Sensores en Tiempo Real</h1>
+
+<div id="graficos" class="chart-container"></div>
+
+<script>
+    Chart.register('chartjs-adapter-luxon');
+
+    document.addEventListener("DOMContentLoaded", async function () {
+        console.log("✅ DOM completamente cargado. Iniciando carga de datos...");
+
+        await cargarDatosHistoricos(1);
+        await cargarDatosHistoricos(2);
+
+        iniciarWebSocket();
+    });
+
+    const sensores = {}; // Objeto para almacenar gráficos por sensor
+
+    async function cargarDatosHistoricos(sensorId) {
+        try {
+            console.log(`📂 Cargando datos históricos para el Sensor ${sensorId}...`);
+
+            const response = await fetch(`/api/sensores/historico/${sensorId}`);
+            const data = await response.json();
+
+            if (data.length === 0) {
+                console.log(`⚠️ No hay datos históricos para el Sensor ${sensorId}`);
+                return;
+            }
+
+            const tempChart = crearGrafico(sensorId, 'temperatura');
+            const humChart = crearGrafico(sensorId, 'humedad');
+
+            data.reverse().forEach(sensorData => {
+                const fecha = luxon.DateTime.fromFormat(sensorData.fechaGeneracion, "dd/MM/yyyy HH:mm:ss").toJSDate();
+
+                tempChart.data.labels.push(fecha);
+                tempChart.data.datasets[0].data.push(sensorData.temperatura);
+
+                humChart.data.labels.push(fecha);
+                humChart.data.datasets[0].data.push(sensorData.humedad);
+            });
+
+            tempChart.update();
+            humChart.update();
+
+            console.log(`✅ Datos históricos cargados en gráficos.`);
+        } catch (error) {
+            console.error("❌ Error cargando datos históricos:", error);
+        }
+    }
+
+    function crearGrafico(sensorId, tipo) {
+        const chartId = `sensor-${sensorId}-${tipo}`;
+
+        if (sensores[chartId]) return sensores[chartId];
+
+        const div = document.createElement('div');
+        div.classList.add('chart-box');
+        div.innerHTML = `<h2>Sensor ${sensorId} - ${tipo.charAt(0).toUpperCase() + tipo.slice(1)}</h2>
+                         <canvas id="${chartId}"></canvas>`;
+        document.getElementById("graficos").appendChild(div);
+
+        const ctx = document.getElementById(chartId).getContext('2d');
+        const chart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: [],
+                datasets: [{
+                    label: tipo === 'temperatura' ? 'Temperatura (°C)' : 'Humedad (%)',
+                    data: [],
+                    borderColor: tipo === 'temperatura' ? '#ff7043' : '#42a5f5',
+                    backgroundColor: tipo === 'temperatura' ? 'rgba(255, 112, 67, 0.2)' : 'rgba(66, 165, 245, 0.2)',
+                    fill: true
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    x: { type: 'time', time: { unit: 'minute', tooltipFormat: 'dd/MM/yyyy HH:mm:ss' } },
+                    y: { beginAtZero: true }
+                }
+            }
+        });
+
+        sensores[chartId] = chart;
+        return chart;
+    }
+
+    function iniciarWebSocket() {
+        const socket = new SockJS('/ws');
+        const stompClient = Stomp.over(socket);
+
+        stompClient.connect({}, function () {
+            console.log("📡 Conectado a WebSocket!");
+
+            stompClient.subscribe('/topic/datos', function (message) {
+                try {
+                    const data = JSON.parse(message.body);
+
+                    // Asegurarse de que el gráfico existe antes de agregar datos
+                    const tempChart = crearGrafico(data.idDispositivo, 'temperatura');
+                    const humChart = crearGrafico(data.idDispositivo, 'humedad');
+
+                    const fecha = luxon.DateTime.fromFormat(data.fechaGeneracion, "dd/MM/yyyy HH:mm:ss").toJSDate();
+
+                    tempChart.data.labels.push(fecha);
+                    tempChart.data.datasets[0].data.push(data.temperatura);
+                    tempChart.update();
+
+                    humChart.data.labels.push(fecha);
+                    humChart.data.datasets[0].data.push(data.humedad);
+                    humChart.update();
+
+                } catch (error) {
+                    console.error("❌ Error procesando mensaje WebSocket:", error);
+                }
+            });
+
+            console.log("✅ WebSocket listo para recibir datos.");
+        }, function () {
+            console.error("❌ Conexión perdida. Reintentando en 5 segundos...");
+            setTimeout(iniciarWebSocket, 5000);
+        });
+    }
+</script>
+
+</body>
+</html>
