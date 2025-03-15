@@ -1,9 +1,39 @@
 version: '3.8'
 services:
-  app:
+  app1:
     image: eddaniel01/mockup-api-server
     ports:
-      - "${APP_PORT:-8080}:8080"
+      - "8080:8080"
+    environment:
+      DB_HOST: db
+      DB_PORT: 3306
+      DB_NAME: ${DB_NAME:-testdb}
+      DB_USER: ${DB_USER:-testuser}
+      DB_PASSWORD: ${DB_PASSWORD:-testpass}
+    depends_on:
+      - db
+    networks:
+      - app-network
+
+  app2:
+    image: eddaniel01/mockup-api-server
+    ports:
+      - "8081:8080"
+    environment:
+      DB_HOST: db
+      DB_PORT: 3306
+      DB_NAME: ${DB_NAME:-testdb}
+      DB_USER: ${DB_USER:-testuser}
+      DB_PASSWORD: ${DB_PASSWORD:-testpass}
+    depends_on:
+      - db
+    networks:
+      - app-network
+
+  app3:
+    image: eddaniel01/mockup-api-server
+    ports:
+      - "8082:8080"
     environment:
       DB_HOST: db
       DB_PORT: 3306
@@ -30,7 +60,7 @@ services:
   phpmyadmin:
     image: phpmyadmin/phpmyadmin
     ports:
-      - "${PHPMYADMIN_PORT:-8082}:80"
+      - "8083:80"
     environment:
       PMA_HOST: db
       PMA_PORT: 3306
