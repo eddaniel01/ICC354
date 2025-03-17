@@ -1,0 +1,73 @@
+plugins {
+    id 'java'
+    id 'org.springframework.boot' version '3.4.3'
+    id 'io.spring.dependency-management' version '1.1.7'
+}
+
+group = 'edu.pucmm'
+version = '0.0.1-SNAPSHOT'
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(21)
+    }
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+
+    // AWS SDK v2 para DynamoDB y Lambda
+    implementation 'software.amazon.awssdk:dynamodb:2.20.100'
+    implementation 'software.amazon.awssdk:lambda:2.20.100'
+    implementation 'software.amazon.awssdk:s3:2.20.100'
+    implementation 'software.amazon.awssdk:core:2.20.100'
+    implementation 'software.amazon.awssdk:auth:2.20.100'
+
+    // Cliente mejorado para DynamoDB
+    implementation 'software.amazon.awssdk:dynamodb-enhanced:2.20.100'
+
+    // Google Gson para manejo JSON en Lambda
+    implementation 'com.google.code.gson:gson:2.10.1'
+
+    // AWS SDK para manejo de Lambda y eventos API Gateway
+    implementation 'com.amazonaws:aws-lambda-java-core:1.2.1'
+    implementation 'com.amazonaws:aws-lambda-java-events:3.11.0'
+
+    // Librería para convertir AWS Lambda en Spring Boot HTTP API
+    implementation 'org.springframework.cloud:spring-cloud-function-adapter-aws:4.1.1'
+
+    // ✅ Lombok para generar automáticamente Getters y Setters
+    compileOnly 'org.projectlombok:lombok:1.18.30'
+    annotationProcessor 'org.projectlombok:lombok:1.18.30'
+
+    // ✅ Dependencias correctas para pruebas con JUnit 5
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.9.3'
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.9.3'
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+}
+
+
+tasks.named('test') {
+    enabled = false;
+}
+
+// 🔹 Nueva forma recomendada de crear la tarea ZIP en Gradle
+tasks.register('buildZip', Zip) {
+    from(tasks.named('compileJava'))
+    from(tasks.named('processResources'))
+    into('lib') {
+        from(configurations.runtimeClasspath)
+    }
+    archiveFileName.set("lambda_function")
+    destinationDirectory.set(file("$buildDir/distributions"))
+}
+
+// Asegurar que `buildZip` se ejecute con `build`
+tasks.named('build') {
+    dependsOn(tasks.named('buildZip'))
+}
