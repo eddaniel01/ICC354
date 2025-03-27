@@ -1,0 +1,17 @@
+{
+  "frontendFolder": "C:/DANIEL/UNIVERSIDAD/CICLO_ENERO_2025/WEB_AVANZADA/ICC354/practica-8/practica-8/./frontend",
+  "themeFolder": "themes",
+  "themeResourceFolder": "C:/DANIEL/UNIVERSIDAD/CICLO_ENERO_2025/WEB_AVANZADA/ICC354/practica-8/practica-8/./frontend/generated/jar-resources",
+  "staticOutput": "C:/DANIEL/UNIVERSIDAD/CICLO_ENERO_2025/WEB_AVANZADA/ICC354/practica-8/practica-8/target/classes/META-INF/VAADIN/webapp/VAADIN/static",
+  "generatedFolder": "generated",
+  "statsOutput": "C:\\DANIEL\\UNIVERSIDAD\\CICLO_ENERO_2025\\WEB_AVANZADA\\ICC354\\practica-8\\practica-8\\target\\classes\\META-INF\\VAADIN\\config",
+  "frontendBundleOutput": "C:\\DANIEL\\UNIVERSIDAD\\CICLO_ENERO_2025\\WEB_AVANZADA\\ICC354\\practica-8\\practica-8\\target\\classes\\META-INF\\VAADIN\\webapp",
+  "devBundleOutput": "C:/DANIEL/UNIVERSIDAD/CICLO_ENERO_2025/WEB_AVANZADA/ICC354/practica-8/practica-8/src/main/dev-bundle/webapp",
+  "devBundleStatsOutput": "C:/DANIEL/UNIVERSIDAD/CICLO_ENERO_2025/WEB_AVANZADA/ICC354/practica-8/practica-8/src/main/dev-bundle/config",
+  "jarResourcesFolder": "C:/DANIEL/UNIVERSIDAD/CICLO_ENERO_2025/WEB_AVANZADA/ICC354/practica-8/practica-8/./frontend/generated/jar-resources",
+  "themeName": "",
+  "clientServiceWorkerSource": "C:\\DANIEL\\UNIVERSIDAD\\CICLO_ENERO_2025\\WEB_AVANZADA\\ICC354\\practica-8\\practica-8\\target\\sw.ts",
+  "pwaEnabled": false,
+  "offlineEnabled": false,
+  "offlinePath": "'offline.html'"
+}
