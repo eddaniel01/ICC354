@@ -8,7 +8,7 @@ WORKDIR /app
 COPY . .
 
 # Construir el proyecto con Gradle
-RUN ./gradlew bootJar
+RUN chmod +x gradlew && ./gradlew bootJar
 
 # Exponer el puerto de la aplicación
 EXPOSE 8080
