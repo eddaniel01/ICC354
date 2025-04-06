@@ -3,9 +3,11 @@ package com.ejemplo.practica8.views;
 import com.ejemplo.practica8.model.Gerente;
 import com.ejemplo.practica8.service.GerenteService;
 import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.grid.GridVariant;
+import com.vaadin.flow.component.html.H2;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
@@ -19,37 +21,68 @@ import jakarta.annotation.security.RolesAllowed;
 
 @Route("gerentes")
 @PageTitle("Gestión de Gerentes")
-@RolesAllowed("ADMIN") // Solo ADMIN puede acceder
+@RolesAllowed("ADMIN")
 public class GerenteView extends VerticalLayout {
 
     private final GerenteService service;
     private final Grid<Gerente> grid = new Grid<>(Gerente.class, false);
+    private final Button nuevoBtn = new Button("Nuevo gerente");
+    private final Button editarBtn = new Button("Editar seleccionado");
+    private final Button eliminarBtn = new Button("Eliminar seleccionado");
+
+    private final Dialog dialog = new Dialog();
     private final TextField nombre = new TextField("Nombre");
     private final EmailField correo = new EmailField("Correo electrónico");
-    private final Button guardar = new Button("Guardar");
-    private final Button eliminar = new Button("Eliminar");
-    private final Binder<Gerente> binder = new Binder<>(Gerente.class);
+    private final Button guardarBtn = new Button("Guardar");
 
+    private final Binder<Gerente> binder = new Binder<>(Gerente.class);
     private Gerente gerenteSeleccionado;
 
     public GerenteView(GerenteService service) {
         this.service = service;
 
         setSizeFull();
-        setPadding(true);
         setSpacing(true);
+        setPadding(true);
 
         configurarGrid();
         configurarFormulario();
+        configurarDialogo();
 
-        add(grid, crearFormulario());
+        HorizontalLayout topBar = new HorizontalLayout(nuevoBtn, editarBtn, eliminarBtn);
+        editarBtn.setEnabled(false);
+        eliminarBtn.setEnabled(false);
+
+        nuevoBtn.addClickListener(e -> {
+            gerenteSeleccionado = new Gerente();
+            abrirDialogo("Nuevo Gerente");
+        });
+
+        editarBtn.addClickListener(e -> {
+            if (gerenteSeleccionado != null) {
+                abrirDialogo("Editar Gerente");
+            }
+        });
+
+        eliminarBtn.addClickListener(e -> {
+            if (gerenteSeleccionado != null) {
+                service.delete(gerenteSeleccionado);
+                Notification.show("Gerente eliminado ❌");
+                grid.getDataProvider().refreshAll();
+                gerenteSeleccionado = null;
+                editarBtn.setEnabled(false);
+                eliminarBtn.setEnabled(false);
+            }
+        });
+
+        add(topBar, grid);
     }
 
     private void configurarGrid() {
         grid.addColumn(Gerente::getId).setHeader("ID").setAutoWidth(true);
         grid.addColumn(Gerente::getNombre).setHeader("Nombre").setAutoWidth(true);
         grid.addColumn(Gerente::getCorreo).setHeader("Correo").setAutoWidth(true);
-        grid.setHeight("300px");
+        grid.setHeight("450px");
         grid.addThemeVariants(GridVariant.LUMO_ROW_STRIPES);
 
         grid.setDataProvider(new CallbackDataProvider<>(
@@ -59,53 +92,61 @@ public class GerenteView extends VerticalLayout {
 
         grid.asSingleSelect().addValueChangeListener(event -> {
             gerenteSeleccionado = event.getValue();
-            binder.readBean(gerenteSeleccionado);
+            boolean seleccionado = gerenteSeleccionado != null;
+            editarBtn.setEnabled(seleccionado);
+            eliminarBtn.setEnabled(seleccionado);
         });
     }
 
     private void configurarFormulario() {
-        binder.bindInstanceFields(this);
-        limpiarFormulario();
+        nombre.setRequiredIndicatorVisible(true);
+        correo.setRequiredIndicatorVisible(true);
+
+        binder.forField(nombre)
+                .asRequired("El nombre es obligatorio")
+                .withValidator(n -> n.length() >= 2, "Debe tener al menos 2 caracteres")
+                .bind(Gerente::getNombre, Gerente::setNombre);
+
+        binder.forField(correo)
+                .asRequired("El correo es obligatorio")
+                .withValidator(email -> email.contains("@") && email.contains("."), "Correo inválido")
+                .bind(Gerente::getCorreo, Gerente::setCorreo);
+
+        binder.addStatusChangeListener(e -> guardarBtn.setEnabled(binder.isValid()));
+        guardarBtn.setEnabled(false);
     }
 
-    private FormLayout crearFormulario() {
-        FormLayout formLayout = new FormLayout();
-        formLayout.add(nombre, correo);
+    private void configurarDialogo() {
+        FormLayout formLayout = new FormLayout(nombre, correo);
+        HorizontalLayout botones = new HorizontalLayout(guardarBtn);
+        VerticalLayout contenido = new VerticalLayout(formLayout, botones);
+        contenido.setSpacing(true);
+        contenido.setAlignItems(Alignment.START);
 
-        binder.bindInstanceFields(this);
-
-        guardar.addClickListener(e -> {
-            if (gerenteSeleccionado == null) {
-                gerenteSeleccionado = new Gerente();
-            }
-            try {
-                binder.writeBean(gerenteSeleccionado);
-                service.save(gerenteSeleccionado);
-                grid.getDataProvider().refreshAll();
-                Notification.show("Guardado exitosamente");
-                limpiarFormulario();
-            } catch (Exception ex) {
-                Notification.show("Error al guardar: " + ex.getMessage(), 3000, Notification.Position.MIDDLE);
+        guardarBtn.addClickListener(e -> {
+            if (binder.validate().isOk()) {
+                try {
+                    binder.writeBean(gerenteSeleccionado);
+                    service.save(gerenteSeleccionado);
+                    Notification.show("Guardado exitosamente ✔️");
+                    grid.getDataProvider().refreshAll();
+                    dialog.close();
+                } catch (Exception ex) {
+                    Notification.show("Error: " + ex.getMessage());
+                }
             }
         });
 
-        eliminar.addClickListener(e -> {
-            if (gerenteSeleccionado != null) {
-                service.delete(gerenteSeleccionado);
-                grid.getDataProvider().refreshAll();
-                Notification.show("Eliminado");
-                limpiarFormulario();
-            }
-        });
-
-        HorizontalLayout botones = new HorizontalLayout(guardar, eliminar);
-        VerticalLayout layout = new VerticalLayout(formLayout, botones);
-        layout.setAlignItems(Alignment.START);
-        return new FormLayout(layout);
+        dialog.setDraggable(true);
+        dialog.setResizable(false);
+        dialog.setModal(true);
+        dialog.setWidth("400px");
+        dialog.add(contenido);
     }
 
-    private void limpiarFormulario() {
-        gerenteSeleccionado = null;
-        binder.readBean(new Gerente());
+    private void abrirDialogo(String titulo) {
+        dialog.setHeaderTitle(titulo);
+        binder.readBean(gerenteSeleccionado);
+        dialog.open();
     }
 }

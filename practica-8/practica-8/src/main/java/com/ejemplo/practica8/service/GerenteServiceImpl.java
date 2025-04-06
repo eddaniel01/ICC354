@@ -11,9 +11,11 @@ import java.util.List;
 public class GerenteServiceImpl implements GerenteService {
 
     private final GerenteRepository repository;
+    private final CorreoService correoService;
 
-    public GerenteServiceImpl(GerenteRepository repository) {
+    public GerenteServiceImpl(GerenteRepository repository, CorreoService correoService) {
         this.repository = repository;
+        this.correoService = correoService;
     }
 
     @Override
@@ -28,7 +30,39 @@ public class GerenteServiceImpl implements GerenteService {
 
     @Override
     public void save(Gerente gerente) {
+        boolean esNuevo = gerente.getId() == null;
+
         repository.save(gerente);
+
+        if (esNuevo) {
+            String mensaje = """
+        <html>
+        <body style="font-family: Arial, sans-serif; background-color: #f4f4f4; padding: 20px;">
+            <div style="max-width: 600px; margin: auto; background-color: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+                <h2 style="color: #1976D2;">¡Bienvenido, %s! 👋</h2>
+                <p>Nos emociona que te unas a nuestra plataforma de gestión de eventos.</p>
+                <p>Puedes acceder a tu calendario desde el siguiente botón:</p>
+                <div style="text-align: center; margin: 30px 0;">
+                    <a href="http://localhost:8080/calendario" 
+                       style="background-color: #1976D2; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold;">
+                       Abrir Calendario 📅
+                    </a>
+                </div>
+                <p>Tu usuario registrado es: <strong>%s</strong></p>
+                <p style="margin-top: 30px;">¡Gracias por usar nuestra aplicación!</p>
+                <hr style="border: none; border-top: 1px solid #eee; margin: 30px 0;">
+                <p style="font-size: 12px; color: #888;">Este correo fue generado automáticamente. No respondas a este mensaje.</p>
+            </div>
+        </body>
+        </html>
+        """.formatted(gerente.getNombre(), gerente.getCorreo());
+
+            correoService.enviarCorreo(
+                    gerente.getCorreo(),
+                    "🎉 ¡Bienvenido a la Agenda de Eventos!",
+                    mensaje
+            );
+        }
     }
 
     @Override

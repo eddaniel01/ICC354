@@ -16,14 +16,28 @@ public class SecurityConfig extends VaadinWebSecurity {
 
     @Override
     protected void configure(HttpSecurity http) throws Exception {
+        // ✅ Desactiva CSRF solo para H2 console
+        http.csrf(csrf -> csrf.ignoringRequestMatchers("/h2-console/**"));
+
+        // ✅ Nueva forma moderna de desactivar frameOptions
+        http.headers(headers -> headers.frameOptions(frameOptions -> frameOptions.disable()));
+
+        // ✅ Autorizar acceso libre a rutas específicas
+        http.authorizeHttpRequests(auth -> auth
+                .requestMatchers("/h2-console/**", "/images/**", "/VAADIN/**").permitAll()
+        );
+
+        // ⚙️ Configuración por defecto de Vaadin
         super.configure(http);
+
+        // 👤 Vista de login
         setLoginView(http, LoginView.class);
     }
 
     @Bean
     public UserDetailsService userDetailsService() {
         var user = User.withUsername("admin")
-                .password("{noop}1234") // {noop} indica sin codificación
+                .password("{noop}1234") // sin codificación
                 .roles("ADMIN")
                 .build();
         return new InMemoryUserDetailsManager(user);
