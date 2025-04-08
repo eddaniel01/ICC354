@@ -31,8 +31,9 @@ public class CustomUserDetailsService implements UserDetailsService {
 
         return User.builder()
                 .username(gerente.getCorreo())
-                .password(gerente.getPassword()) // sin {noop}
-                .roles("ADMIN")
+                .password(gerente.getPassword())
+                .roles(gerente.getRol().toUpperCase()) // Usar el rol guardado en la DB
                 .build();
+
     }
 }

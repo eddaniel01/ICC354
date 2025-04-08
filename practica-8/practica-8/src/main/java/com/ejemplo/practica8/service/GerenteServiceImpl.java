@@ -39,6 +39,9 @@ public class GerenteServiceImpl implements GerenteService {
 
         if (esNuevo) {
             gerente.setPassword(passwordEncoder.encode(gerente.getPassword()));
+            if (gerente.getRol() == null) {
+                gerente.setRol("USER"); // Valor por defecto
+            }
         }
 
         repository.save(gerente);

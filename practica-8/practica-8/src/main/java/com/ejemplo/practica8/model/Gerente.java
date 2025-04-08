@@ -17,6 +17,9 @@ public class Gerente {
 
     private String password;
 
+    private String rol; // "ADMIN" o "USER"
+
+
     // Getters y setters
     public Long getId() {
         return id;
@@ -49,4 +52,13 @@ public class Gerente {
     public void setPassword(String password) {
         this.password = password;
     }
+
+    public String getRol() {
+        return rol;
+    }
+
+    public void setRol(String rol) {
+        this.rol = rol;
+    }
+
 }

@@ -20,6 +20,9 @@ import com.vaadin.flow.data.provider.CallbackDataProvider;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import jakarta.annotation.security.RolesAllowed;
+import com.vaadin.flow.component.icon.Icon;
+import com.vaadin.flow.component.icon.VaadinIcon;
+import com.vaadin.flow.server.VaadinSession;
 
 @Route("gerentes")
 @PageTitle("Gestión de Gerentes")
@@ -56,7 +59,14 @@ public class GerenteView extends VerticalLayout {
         Button perfilBtn = new Button("Mi Perfil", e -> UI.getCurrent().navigate("perfil"));
         perfilBtn.getStyle().set("background", "#6A1B9A").set("color", "white");
 
-        HorizontalLayout topBar = new HorizontalLayout(nuevoBtn, editarBtn, eliminarBtn, perfilBtn);
+        Button logoutBtn = new Button("Cerrar sesión", new Icon(VaadinIcon.SIGN_OUT));
+        logoutBtn.getStyle().set("background", "#D32F2F").set("color", "white");
+        logoutBtn.addClickListener(e -> {
+            VaadinSession.getCurrent().getSession().invalidate();
+            UI.getCurrent().getPage().setLocation("login");
+        });
+
+        HorizontalLayout topBar = new HorizontalLayout(nuevoBtn, editarBtn, eliminarBtn, perfilBtn, logoutBtn);
         editarBtn.setEnabled(false);
         eliminarBtn.setEnabled(false);
 

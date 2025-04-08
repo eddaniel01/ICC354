@@ -6,6 +6,7 @@ import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.server.auth.AnonymousAllowed;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 
 @Route("")
@@ -15,7 +16,14 @@ public class MainView extends VerticalLayout {
     public MainView() {
         if (SecurityContextHolder.getContext().getAuthentication().isAuthenticated()
                 && !(SecurityContextHolder.getContext().getAuthentication() instanceof AnonymousAuthenticationToken)) {
-            UI.getCurrent().navigate("gerentes");
+            Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+
+            if (auth.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"))) {
+                UI.getCurrent().navigate("gerentes");
+            } else {
+                UI.getCurrent().navigate("calendario");
+            }
+
         } else {
             UI.getCurrent().navigate("login");
         }

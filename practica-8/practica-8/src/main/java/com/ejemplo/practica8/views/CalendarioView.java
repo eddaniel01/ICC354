@@ -20,6 +20,8 @@ import jakarta.annotation.security.RolesAllowed;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.vaadin.stefan.fullcalendar.*;
+import com.vaadin.flow.server.VaadinSession;
+import com.vaadin.flow.component.icon.VaadinIcon;
 
 import org.vaadin.stefan.fullcalendar.dataprovider.InMemoryEntryProvider;
 
@@ -85,14 +87,20 @@ public class CalendarioView extends VerticalLayout {
         perfilBtn.addClickListener(e -> UI.getCurrent().navigate("perfil"));
         perfilBtn.getStyle().set("background", "#6A1B9A").set("color", "white");
 
+        Button logoutBtn = new Button("Cerrar sesión", new Icon(VaadinIcon.SIGN_OUT));
+        logoutBtn.getStyle().set("background", "#D32F2F").set("color", "white");
+        logoutBtn.addClickListener(e -> {
+            VaadinSession.getCurrent().getSession().invalidate();
+            UI.getCurrent().getPage().setLocation("login");
+        });
 
-        HorizontalLayout botones = new HorizontalLayout(vistaMes, vistaSemana, vistaDia, perfilBtn);
+        HorizontalLayout botones = new HorizontalLayout(vistaMes, vistaSemana, vistaDia, perfilBtn, logoutBtn);
         botones.setSpacing(true);
         botones.setPadding(true);
 
         add(titulo, botones);
-
     }
+
 
     private void configurarCalendario() {
         calendar.changeView(CalendarViewImpl.TIME_GRID_WEEK);
