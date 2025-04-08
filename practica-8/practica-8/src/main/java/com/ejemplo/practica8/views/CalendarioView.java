@@ -4,6 +4,7 @@ import com.ejemplo.practica8.model.Evento;
 import com.ejemplo.practica8.model.Gerente;
 import com.ejemplo.practica8.service.EventoService;
 import com.ejemplo.practica8.service.GerenteService;
+import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.html.H1;
@@ -80,11 +81,17 @@ public class CalendarioView extends VerticalLayout {
         vistaSemana.getStyle().set("background", "#43A047").set("color", "white");
         vistaDia.getStyle().set("background", "#FB8C00").set("color", "white");
 
-        HorizontalLayout botones = new HorizontalLayout(vistaMes, vistaSemana, vistaDia);
+        Button perfilBtn = new Button("Mi Perfil", new Icon(VaadinIcon.USER));
+        perfilBtn.addClickListener(e -> UI.getCurrent().navigate("perfil"));
+        perfilBtn.getStyle().set("background", "#6A1B9A").set("color", "white");
+
+
+        HorizontalLayout botones = new HorizontalLayout(vistaMes, vistaSemana, vistaDia, perfilBtn);
         botones.setSpacing(true);
         botones.setPadding(true);
 
         add(titulo, botones);
+
     }
 
     private void configurarCalendario() {

@@ -2,6 +2,7 @@ package com.ejemplo.practica8.views;
 
 import com.ejemplo.practica8.model.Gerente;
 import com.ejemplo.practica8.service.GerenteService;
+import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.formlayout.FormLayout;
@@ -49,7 +50,10 @@ public class GerenteView extends VerticalLayout {
         configurarFormulario();
         configurarDialogo();
 
-        HorizontalLayout topBar = new HorizontalLayout(nuevoBtn, editarBtn, eliminarBtn);
+        Button perfilBtn = new Button("Mi Perfil", e -> UI.getCurrent().navigate("perfil"));
+        perfilBtn.getStyle().set("background", "#6A1B9A").set("color", "white");
+
+        HorizontalLayout topBar = new HorizontalLayout(nuevoBtn, editarBtn, eliminarBtn, perfilBtn);
         editarBtn.setEnabled(false);
         eliminarBtn.setEnabled(false);
 
