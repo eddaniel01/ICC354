@@ -4,6 +4,8 @@ import com.ejemplo.practica8.model.Gerente;
 import com.ejemplo.practica8.repository.GerenteRepository;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
+import org.springframework.security.crypto.password.PasswordEncoder;
+
 
 import java.util.List;
 
@@ -13,9 +15,12 @@ public class GerenteServiceImpl implements GerenteService {
     private final GerenteRepository repository;
     private final CorreoService correoService;
 
-    public GerenteServiceImpl(GerenteRepository repository, CorreoService correoService) {
+    private final PasswordEncoder passwordEncoder;
+
+    public GerenteServiceImpl(GerenteRepository repository, CorreoService correoService, PasswordEncoder passwordEncoder) {
         this.repository = repository;
         this.correoService = correoService;
+        this.passwordEncoder = passwordEncoder;
     }
 
     @Override
@@ -31,6 +36,10 @@ public class GerenteServiceImpl implements GerenteService {
     @Override
     public void save(Gerente gerente) {
         boolean esNuevo = gerente.getId() == null;
+
+        if (esNuevo) {
+            gerente.setPassword(passwordEncoder.encode(gerente.getPassword()));
+        }
 
         repository.save(gerente);
 

@@ -15,6 +15,8 @@ public class Gerente {
     private String nombre;
     private String correo;
 
+    private String password;
+
     // Getters y setters
     public Long getId() {
         return id;
@@ -38,5 +40,13 @@ public class Gerente {
 
     public void setCorreo(String correo) {
         this.correo = correo;
+    }
+
+    public String getPassword() {
+        return password;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
     }
 }

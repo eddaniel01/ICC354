@@ -13,6 +13,7 @@ import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.EmailField;
+import com.vaadin.flow.component.textfield.PasswordField;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.binder.Binder;
 import com.vaadin.flow.data.provider.CallbackDataProvider;
@@ -34,6 +35,8 @@ public class GerenteView extends VerticalLayout {
     private final Dialog dialog = new Dialog();
     private final TextField nombre = new TextField("Nombre");
     private final EmailField correo = new EmailField("Correo electrónico");
+
+    private final PasswordField password = new PasswordField("Contraseña");
     private final Button guardarBtn = new Button("Guardar");
 
     private final Binder<Gerente> binder = new Binder<>(Gerente.class);
@@ -116,12 +119,16 @@ public class GerenteView extends VerticalLayout {
                 .withValidator(email -> email.contains("@") && email.contains("."), "Correo inválido")
                 .bind(Gerente::getCorreo, Gerente::setCorreo);
 
+        binder.forField(password)
+                .asRequired("La contraseña es obligatoria")
+                .bind(Gerente::getPassword, Gerente::setPassword);
+
         binder.addStatusChangeListener(e -> guardarBtn.setEnabled(binder.isValid()));
         guardarBtn.setEnabled(false);
     }
 
     private void configurarDialogo() {
-        FormLayout formLayout = new FormLayout(nombre, correo);
+        FormLayout formLayout = new FormLayout(nombre, correo, password);
         HorizontalLayout botones = new HorizontalLayout(guardarBtn);
         VerticalLayout contenido = new VerticalLayout(formLayout, botones);
         contenido.setSpacing(true);
