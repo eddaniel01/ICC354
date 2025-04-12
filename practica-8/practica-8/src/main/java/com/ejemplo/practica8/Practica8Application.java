@@ -31,7 +31,6 @@ public class Practica8Application {
         };
     }
 
-
     @Bean
     CommandLineRunner testEnvioCorreo(CorreoService correoService) {
         return args -> {
