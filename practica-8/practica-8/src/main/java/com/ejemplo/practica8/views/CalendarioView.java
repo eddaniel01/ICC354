@@ -10,6 +10,7 @@ import com.vaadin.flow.component.datepicker.DatePicker;
 import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.html.H1;
+import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
@@ -24,6 +25,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 @Route("calendario")
@@ -68,9 +70,18 @@ public class CalendarioView extends VerticalLayout {
         HorizontalLayout barraSuperior = new HorizontalLayout(datePicker, nuevoEventoBtn);
         barraSuperior.setSpacing(true);
 
-        grid.addColumn(Evento::getTitulo).setHeader("Título");
-        grid.addColumn(evento -> evento.getFechaInicio().toLocalTime()).setHeader("Inicio");
-        grid.addColumn(evento -> evento.getFechaFin().toLocalTime()).setHeader("Fin");
+        grid.addComponentColumn(evento -> {
+            Span span = new Span("📌 " + evento.getTitulo());
+            span.getStyle().set("fontWeight", "bold");
+            return span;
+        }).setHeader("Evento");
+
+        grid.addColumn(evento -> evento.getFechaInicio().toLocalTime().format(DateTimeFormatter.ofPattern("HH:mm")))
+                .setHeader("Inicio");
+        grid.addColumn(evento -> evento.getFechaFin().toLocalTime().format(DateTimeFormatter.ofPattern("HH:mm")))
+                .setHeader("Fin");
+
+
         grid.addComponentColumn(evento -> {
             Button eliminar = new Button("Eliminar", e -> {
                 eventoService.delete(evento.getId());
@@ -78,8 +89,13 @@ public class CalendarioView extends VerticalLayout {
                 Notification.show("Evento eliminado ❌");
             });
             eliminar.getStyle().set("color", "red");
-            return eliminar;
+
+            Button reprogramar = new Button("Reprogramar", e -> abrirDialogoReprogramarEvento(evento));
+            reprogramar.getStyle().set("color", "blue");
+
+            return new HorizontalLayout(reprogramar, eliminar);
         }).setHeader("Acciones");
+
 
         add(titulo, barraSuperior, grid);
     }
@@ -127,4 +143,41 @@ public class CalendarioView extends VerticalLayout {
         dialog.add(new VerticalLayout(titulo, descripcion, guardar));
         dialog.open();
     }
+
+    private void abrirDialogoReprogramarEvento(Evento evento) {
+        Dialog dialog = new Dialog();
+        dialog.setHeaderTitle("📆 Reprogramar Evento");
+
+        DatePicker nuevaFecha = new DatePicker("Nueva Fecha");
+        nuevaFecha.setValue(evento.getFechaInicio().toLocalDate());
+
+        TextField nuevaHoraInicio = new TextField("Nueva Hora de Inicio (HH:mm)");
+        nuevaHoraInicio.setValue(evento.getFechaInicio().toLocalTime().toString());
+
+        TextField nuevaHoraFin = new TextField("Nueva Hora de Fin (HH:mm)");
+        nuevaHoraFin.setValue(evento.getFechaFin().toLocalTime().toString());
+
+        Button guardar = new Button("Guardar", ev -> {
+            try {
+                LocalDate fecha = nuevaFecha.getValue();
+                LocalTime horaInicio = LocalTime.parse(nuevaHoraInicio.getValue());
+                LocalTime horaFin = LocalTime.parse(nuevaHoraFin.getValue());
+
+                evento.setFechaInicio(LocalDateTime.of(fecha, horaInicio));
+                evento.setFechaFin(LocalDateTime.of(fecha, horaFin));
+
+                eventoService.save(evento);
+                dialog.close();
+                actualizarGrid(fecha);
+                Notification.show("Evento reprogramado ✔️");
+            } catch (Exception ex) {
+                Notification.show("❌ Error: formato inválido");
+            }
+        });
+
+        VerticalLayout contenido = new VerticalLayout(nuevaFecha, nuevaHoraInicio, nuevaHoraFin, guardar);
+        dialog.add(contenido);
+        dialog.open();
+    }
+
 }
