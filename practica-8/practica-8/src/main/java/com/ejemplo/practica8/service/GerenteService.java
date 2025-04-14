@@ -9,4 +9,6 @@ public interface GerenteService {
     int count();
     void save(Gerente gerente);
     void delete(Gerente gerente);
+    Gerente findByCorreo(String correo);
+
 }

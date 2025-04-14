@@ -32,7 +32,7 @@ public class Practica8Application {
     }
 
 
-    @Bean
+    /*@Bean
     CommandLineRunner testEnvioCorreo(CorreoService correoService) {
         return args -> {
             correoService.enviarCorreo(
@@ -41,6 +41,6 @@ public class Practica8Application {
                     "<h1>Hola 👋</h1><p>Esto es una prueba de envío de correo con SendGrid y Spring Boot</p>"
             );
         };
-    }
+    }*/
 
 }

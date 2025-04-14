@@ -23,6 +23,8 @@ import jakarta.annotation.security.RolesAllowed;
 import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.server.VaadinSession;
+import com.vaadin.flow.component.combobox.ComboBox;
+
 
 @Route("gerentes")
 @PageTitle("Gestión de Gerentes")
@@ -34,7 +36,7 @@ public class GerenteView extends VerticalLayout {
     private final Button nuevoBtn = new Button("Nuevo gerente");
     private final Button editarBtn = new Button("Editar seleccionado");
     private final Button eliminarBtn = new Button("Eliminar seleccionado");
-
+    private final ComboBox<String> rol = new ComboBox<>("Rol");
     private final Dialog dialog = new Dialog();
     private final TextField nombre = new TextField("Nombre");
     private final EmailField correo = new EmailField("Correo electrónico");
@@ -61,9 +63,15 @@ public class GerenteView extends VerticalLayout {
 
         Button logoutBtn = new Button("Cerrar sesión", new Icon(VaadinIcon.SIGN_OUT));
         logoutBtn.getStyle().set("background", "#D32F2F").set("color", "white");
+
         logoutBtn.addClickListener(e -> {
-            VaadinSession.getCurrent().getSession().invalidate();
-            UI.getCurrent().getPage().setLocation("login");
+            UI ui = UI.getCurrent();
+            if (ui != null) {
+                ui.access(() -> {
+                    VaadinSession.getCurrent().getSession().invalidate();
+                    ui.getPage().setLocation("login");
+                });
+            }
         });
 
         HorizontalLayout topBar = new HorizontalLayout(nuevoBtn, editarBtn, eliminarBtn, perfilBtn, logoutBtn);
@@ -118,6 +126,8 @@ public class GerenteView extends VerticalLayout {
     private void configurarFormulario() {
         nombre.setRequiredIndicatorVisible(true);
         correo.setRequiredIndicatorVisible(true);
+        rol.setItems("USER", "ADMIN");
+        rol.setRequired(true);
 
         binder.forField(nombre)
                 .asRequired("El nombre es obligatorio")
@@ -135,10 +145,15 @@ public class GerenteView extends VerticalLayout {
 
         binder.addStatusChangeListener(e -> guardarBtn.setEnabled(binder.isValid()));
         guardarBtn.setEnabled(false);
+
+        binder.forField(rol)
+                .asRequired("El rol es obligatorio")
+                .bind(Gerente::getRol, Gerente::setRol);
+
     }
 
     private void configurarDialogo() {
-        FormLayout formLayout = new FormLayout(nombre, correo, password);
+        FormLayout formLayout = new FormLayout(nombre, correo, password, rol);
         HorizontalLayout botones = new HorizontalLayout(guardarBtn);
         VerticalLayout contenido = new VerticalLayout(formLayout, botones);
         contenido.setSpacing(true);

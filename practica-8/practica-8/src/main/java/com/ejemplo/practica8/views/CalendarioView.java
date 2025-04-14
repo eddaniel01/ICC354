@@ -30,7 +30,7 @@ import java.util.List;
 
 @Route("calendario")
 @PageTitle("Calendario de Eventos")
-@RolesAllowed("ADMIN")
+@RolesAllowed({"ADMIN", "USER"})
 public class CalendarioView extends VerticalLayout {
 
     private final EventoService eventoService;
@@ -57,11 +57,7 @@ public class CalendarioView extends VerticalLayout {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         String correo = auth.getName(); // Spring Security devuelve el "username", en este caso es el correo
 
-        gerenteAutenticado = gerenteService.findAll(0, 100)
-                .stream()
-                .filter(g -> g.getCorreo().equalsIgnoreCase(correo))
-                .findFirst()
-                .orElse(null);
+        gerenteAutenticado = gerenteService.findByCorreo(correo);
 
         if (gerenteAutenticado == null) {
             Notification.show("⚠️ No se pudo cargar el gerente autenticado.", 5000, Notification.Position.MIDDLE);
@@ -89,9 +85,13 @@ public class CalendarioView extends VerticalLayout {
 
         Button logoutBtn = new Button("Cerrar sesión", new Icon(VaadinIcon.SIGN_OUT));
         logoutBtn.getStyle().set("background", "#D32F2F").set("color", "white");
+
         logoutBtn.addClickListener(e -> {
+            UI ui = UI.getCurrent();
             VaadinSession.getCurrent().getSession().invalidate();
-            UI.getCurrent().getPage().setLocation("login");
+            if (ui != null) {
+                ui.access(() -> ui.getPage().setLocation("login"));
+            }
         });
 
         HorizontalLayout botones = new HorizontalLayout(vistaMes, vistaSemana, vistaDia, perfilBtn, logoutBtn);

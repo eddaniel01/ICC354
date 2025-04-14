@@ -17,7 +17,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 
 @Route("perfil")
 @PageTitle("Mi Perfil")
-@RolesAllowed("ADMIN")
+@RolesAllowed({"ADMIN", "USER"})
 public class PerfilView extends VerticalLayout {
 
     private final GerenteService gerenteService;
@@ -47,10 +47,7 @@ public class PerfilView extends VerticalLayout {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         String email = auth.getName();
 
-        gerenteActual = gerenteService.findAll(0, 100).stream()
-                .filter(g -> g.getCorreo().equalsIgnoreCase(email))
-                .findFirst()
-                .orElse(null);
+        gerenteActual = gerenteService.findByCorreo(email);
 
         if (gerenteActual != null) {
             binder.readBean(gerenteActual);

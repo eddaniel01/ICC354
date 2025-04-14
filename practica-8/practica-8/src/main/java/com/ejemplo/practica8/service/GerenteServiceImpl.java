@@ -81,4 +81,9 @@ public class GerenteServiceImpl implements GerenteService {
     public void delete(Gerente gerente) {
         repository.delete(gerente);
     }
+
+    @Override
+    public Gerente findByCorreo(String correo) {
+        return repository.findByCorreo(correo).orElse(null);
+    }
 }
