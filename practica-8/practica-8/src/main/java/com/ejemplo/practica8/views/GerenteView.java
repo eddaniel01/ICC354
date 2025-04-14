@@ -64,6 +64,10 @@ public class GerenteView extends VerticalLayout {
         Button logoutBtn = new Button("Cerrar sesión", new Icon(VaadinIcon.SIGN_OUT));
         logoutBtn.getStyle().set("background", "#D32F2F").set("color", "white");
 
+        Button calendarioBtn = new Button("Calendario", new Icon(VaadinIcon.CALENDAR));
+        calendarioBtn.getStyle().set("background", "#1976D2").set("color", "white");
+        calendarioBtn.addClickListener(e -> UI.getCurrent().navigate("calendario"));
+
         logoutBtn.addClickListener(e -> {
             UI ui = UI.getCurrent();
             if (ui != null) {
@@ -74,7 +78,7 @@ public class GerenteView extends VerticalLayout {
             }
         });
 
-        HorizontalLayout topBar = new HorizontalLayout(nuevoBtn, editarBtn, eliminarBtn, perfilBtn, logoutBtn);
+        HorizontalLayout topBar = new HorizontalLayout(nuevoBtn, editarBtn, eliminarBtn, calendarioBtn, perfilBtn, logoutBtn);
         editarBtn.setEnabled(false);
         eliminarBtn.setEnabled(false);
 
