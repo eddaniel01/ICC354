@@ -20,6 +20,10 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.vaadin.stefan.fullcalendar.*;
 import org.vaadin.stefan.fullcalendar.dataprovider.InMemoryEntryProvider;
+import com.vaadin.flow.component.Html;
+import com.vaadin.flow.component.html.Div;
+
+
 
 import com.vaadin.flow.component.combobox.ComboBox;
 import java.time.Month;
@@ -72,10 +76,53 @@ public class CalendarioView extends VerticalLayout {
 
         calendar.addEntryClickedListener(event -> {
             Entry entrada = event.getEntry();
-            eventoService.delete(Long.parseLong(entrada.getId()));
-            provider.removeEntry(entrada);
-            Notification.show("Evento eliminado");
+
+            Dialog dialog = new Dialog();
+            dialog.setHeaderTitle("Detalles del Evento");
+
+            Evento evento = eventoService.findByGerenteId(gerenteAutenticado.getId()).stream()
+                    .filter(ev -> ev.getId().equals(Long.parseLong(entrada.getId())))
+                    .findFirst()
+                    .orElse(null);
+
+            if (evento != null) {
+                String detalles = """
+            📝 <b>Título:</b> %s<br>
+            📖 <b>Descripción:</b> %s<br>
+            🕒 <b>Inicio:</b> %s<br>
+            ⏰ <b>Fin:</b> %s
+            """.formatted(
+                        evento.getTitulo(),
+                        evento.getDescripcion() != null ? evento.getDescripcion() : "(Sin descripción)",
+                        evento.getFechaInicio().toString().replace("T", " "),
+                        evento.getFechaFin().toString().replace("T", " ")
+                );
+
+                Div contenido = new Div();
+                contenido.getElement().setProperty("innerHTML", "<div style='font-family:sans-serif'>" + detalles + "</div>");
+                dialog.add(contenido);
+
+                // Botón para cerrar
+                Button cerrar = new Button("Cerrar", e -> dialog.close());
+
+                // Botón para eliminar
+                Button eliminar = new Button("Eliminar", e -> {
+                    eventoService.delete(evento.getId());
+                    provider.removeEntry(entrada);
+                    provider.refreshAll();
+                    dialog.close();
+                    Notification.show("Evento eliminado");
+                });
+
+                dialog.getFooter().add(cerrar, eliminar);
+            } else {
+                dialog.add("No se encontró el evento.");
+                dialog.getFooter().add(new Button("Cerrar", e -> dialog.close()));
+            }
+
+            dialog.open();
         });
+
 
 
         H1 titulo = new H1("📅 Calendario de Eventos");
