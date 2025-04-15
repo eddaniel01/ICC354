@@ -21,6 +21,10 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.vaadin.stefan.fullcalendar.*;
 import org.vaadin.stefan.fullcalendar.dataprovider.InMemoryEntryProvider;
 
+import com.vaadin.flow.component.combobox.ComboBox;
+import java.time.Month;
+import java.time.YearMonth;
+
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Locale;
@@ -68,12 +72,11 @@ public class CalendarioView extends VerticalLayout {
 
         calendar.addEntryClickedListener(event -> {
             Entry entrada = event.getEntry();
-            Long idEvento = Long.parseLong(entrada.getId());
-            eventoService.delete(idEvento);
+            eventoService.delete(Long.parseLong(entrada.getId()));
             provider.removeEntry(entrada);
-            provider.refreshAll();
             Notification.show("Evento eliminado");
         });
+
 
         H1 titulo = new H1("📅 Calendario de Eventos");
         titulo.getStyle()
@@ -81,7 +84,19 @@ public class CalendarioView extends VerticalLayout {
                 .set("font-size", "28px")
                 .set("color", "#1976D2");
 
-        add(titulo, calendar);
+        ComboBox<Month> selectorMes = new ComboBox<>("Mes");
+        selectorMes.setItems(Month.values());
+        selectorMes.setItemLabelGenerator(month -> month.getDisplayName(java.time.format.TextStyle.FULL, new Locale("es")));
+        selectorMes.setValue(LocalDateTime.now().getMonth());
+
+        selectorMes.addValueChangeListener(e -> {
+            if (e.getValue() != null) {
+                LocalDateTime nuevaFecha = YearMonth.of(LocalDateTime.now().getYear(), e.getValue()).atDay(1).atStartOfDay();
+                calendar.gotoDate(nuevaFecha.toLocalDate());
+            }
+        });
+
+        add(titulo, selectorMes, calendar);
     }
 
 
