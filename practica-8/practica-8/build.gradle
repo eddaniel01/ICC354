@@ -20,6 +20,7 @@ repositories {
     }
 }
 
+
 dependencies {
     implementation 'org.springframework.boot:spring-boot-starter'
     implementation 'com.vaadin:vaadin-spring-boot-starter:24.2.0'

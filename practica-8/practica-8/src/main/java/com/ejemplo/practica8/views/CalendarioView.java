@@ -5,31 +5,28 @@ import com.ejemplo.practica8.model.Gerente;
 import com.ejemplo.practica8.service.EventoService;
 import com.ejemplo.practica8.service.GerenteService;
 import com.vaadin.flow.component.UI;
-import com.vaadin.flow.component.button.Button;
-import com.vaadin.flow.component.datepicker.DatePicker;
+import com.vaadin.flow.component.datetimepicker.DateTimePicker;
 import com.vaadin.flow.component.dialog.Dialog;
-import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.html.H1;
-import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.notification.Notification;
-import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.TextArea;
 import com.vaadin.flow.component.textfield.TextField;
+import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import jakarta.annotation.security.RolesAllowed;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.vaadin.stefan.fullcalendar.*;
+import org.vaadin.stefan.fullcalendar.dataprovider.InMemoryEntryProvider;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.LocalTime;
-import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Locale;
 
 @Route("calendario")
-@PageTitle("Calendario Simplificado")
+@PageTitle("Calendario Interactivo")
 @RolesAllowed({"ADMIN", "USER"})
 public class CalendarioView extends VerticalLayout {
 
@@ -37,104 +34,85 @@ public class CalendarioView extends VerticalLayout {
     private final GerenteService gerenteService;
     private Gerente gerenteAutenticado;
 
-    private final DatePicker datePicker = new DatePicker("Selecciona una fecha");
-    private final Grid<Evento> grid = new Grid<>(Evento.class, false);
-    private final Button nuevoEventoBtn = new Button("➕ Nuevo evento");
+    private FullCalendar calendar;
+    private InMemoryEntryProvider<Entry> provider;
 
     public CalendarioView(EventoService eventoService, GerenteService gerenteService) {
         this.eventoService = eventoService;
         this.gerenteService = gerenteService;
 
         cargarGerenteAutenticado();
-        configurarUI();
-        configurarEventos();
+        configurarCalendario();
+        cargarEventosEnCalendario();
     }
 
     private void cargarGerenteAutenticado() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         String correo = auth.getName();
         gerenteAutenticado = gerenteService.findByCorreo(correo);
-        if (gerenteAutenticado == null) {
-            Notification.show("⚠️ No se encontró el gerente autenticado");
-        }
     }
 
-    private void configurarUI() {
-        setSizeFull();
-        setPadding(true);
-        setSpacing(true);
+    private void configurarCalendario() {
+        calendar = FullCalendarBuilder.create().withEntryLimit(1000).build();
+        calendar.setHeight("800px");
+        calendar.setWidthFull();
 
-        H1 titulo = new H1("📅 Mi Calendario");
-        datePicker.setValue(LocalDate.now());
+        calendar.setLocale(Locale.forLanguageTag("es"));
 
-        HorizontalLayout barraSuperior = new HorizontalLayout(datePicker, nuevoEventoBtn);
-        barraSuperior.setSpacing(true);
+        provider = (InMemoryEntryProvider<Entry>) calendar.getEntryProvider();
 
-        grid.addComponentColumn(evento -> {
-            Span span = new Span("📌 " + evento.getTitulo());
-            span.getStyle().set("fontWeight", "bold");
-            return span;
-        }).setHeader("Evento");
+        calendar.addTimeslotClickedListener(event -> {
+            LocalDateTime fechaInicio = event.getDateTime();
+            mostrarDialogoCrearEvento(fechaInicio);
+        });
 
-        grid.addColumn(evento -> evento.getFechaInicio().toLocalTime().format(DateTimeFormatter.ofPattern("HH:mm")))
-                .setHeader("Inicio");
-        grid.addColumn(evento -> evento.getFechaFin().toLocalTime().format(DateTimeFormatter.ofPattern("HH:mm")))
-                .setHeader("Fin");
+        calendar.addEntryClickedListener(event -> {
+            Entry entrada = event.getEntry();
+            Long idEvento = Long.parseLong(entrada.getId());
+            eventoService.delete(idEvento);
+            provider.removeEntry(entrada);
+            provider.refreshAll();
+            Notification.show("Evento eliminado");
+        });
 
+        H1 titulo = new H1("📅 Calendario de Eventos");
+        titulo.getStyle()
+                .set("margin", "20px 0")
+                .set("font-size", "28px")
+                .set("color", "#1976D2");
 
-        grid.addComponentColumn(evento -> {
-            Button eliminar = new Button("Eliminar", e -> {
-                eventoService.delete(evento.getId());
-                actualizarGrid(datePicker.getValue());
-                Notification.show("Evento eliminado ❌");
-            });
-            eliminar.getStyle().set("color", "red");
-
-            Button reprogramar = new Button("Reprogramar", e -> abrirDialogoReprogramarEvento(evento));
-            reprogramar.getStyle().set("color", "blue");
-
-            return new HorizontalLayout(reprogramar, eliminar);
-        }).setHeader("Acciones");
-
-
-        add(titulo, barraSuperior, grid);
+        add(titulo, calendar);
     }
 
-    private void configurarEventos() {
-        datePicker.addValueChangeListener(e -> actualizarGrid(e.getValue()));
-        nuevoEventoBtn.addClickListener(e -> abrirDialogoNuevoEvento());
-        actualizarGrid(LocalDate.now());
-    }
 
-    private void actualizarGrid(LocalDate fecha) {
-        if (gerenteAutenticado != null && fecha != null) {
-            List<Evento> eventos = eventoService.findByGerenteId(gerenteAutenticado.getId()).stream()
-                    .filter(ev -> ev.getFechaInicio().toLocalDate().equals(fecha))
-                    .toList();
-            grid.setItems(eventos);
-        }
-    }
-
-    private void abrirDialogoNuevoEvento() {
+    private void abrirFormularioCrearEvento(LocalDateTime inicio, LocalDateTime fin) {
         Dialog dialog = new Dialog();
-        dialog.setHeaderTitle("Crear nuevo evento");
+        dialog.setHeaderTitle("Nuevo Evento");
 
         TextField titulo = new TextField("Título");
         TextArea descripcion = new TextArea("Descripción");
 
-        Button guardar = new Button("Guardar", e -> {
+        Button guardar = new Button("Crear Evento", e -> {
             if (!titulo.getValue().trim().isEmpty()) {
                 Evento nuevo = new Evento();
-                nuevo.setTitulo(titulo.getValue().trim());
+                nuevo.setTitulo(titulo.getValue());
                 nuevo.setDescripcion(descripcion.getValue());
-                nuevo.setFechaInicio(LocalDateTime.of(datePicker.getValue(), LocalTime.of(9, 0)));
-                nuevo.setFechaFin(LocalDateTime.of(datePicker.getValue(), LocalTime.of(10, 0)));
+                nuevo.setFechaInicio(inicio);
+                nuevo.setFechaFin(fin);
                 nuevo.setGerente(gerenteAutenticado);
 
-                eventoService.save(nuevo);
+                Evento guardado = eventoService.save(nuevo);
+
+                Entry entrada = new Entry(String.valueOf(guardado.getId()));
+                entrada.setTitle(guardado.getTitulo());
+                entrada.setStart(guardado.getFechaInicio());
+                entrada.setEnd(guardado.getFechaFin());
+                entrada.setColor("blue");
+
+                provider.addEntries(List.of(entrada));
+                provider.refreshAll();
                 dialog.close();
-                actualizarGrid(datePicker.getValue());
-                Notification.show("Evento creado ✔️");
+                Notification.show("Evento creado ✔");
             } else {
                 Notification.show("El título es obligatorio");
             }
@@ -144,39 +122,60 @@ public class CalendarioView extends VerticalLayout {
         dialog.open();
     }
 
-    private void abrirDialogoReprogramarEvento(Evento evento) {
-        Dialog dialog = new Dialog();
-        dialog.setHeaderTitle("📆 Reprogramar Evento");
-
-        DatePicker nuevaFecha = new DatePicker("Nueva Fecha");
-        nuevaFecha.setValue(evento.getFechaInicio().toLocalDate());
-
-        TextField nuevaHoraInicio = new TextField("Nueva Hora de Inicio (HH:mm)");
-        nuevaHoraInicio.setValue(evento.getFechaInicio().toLocalTime().toString());
-
-        TextField nuevaHoraFin = new TextField("Nueva Hora de Fin (HH:mm)");
-        nuevaHoraFin.setValue(evento.getFechaFin().toLocalTime().toString());
-
-        Button guardar = new Button("Guardar", ev -> {
-            try {
-                LocalDate fecha = nuevaFecha.getValue();
-                LocalTime horaInicio = LocalTime.parse(nuevaHoraInicio.getValue());
-                LocalTime horaFin = LocalTime.parse(nuevaHoraFin.getValue());
-
-                evento.setFechaInicio(LocalDateTime.of(fecha, horaInicio));
-                evento.setFechaFin(LocalDateTime.of(fecha, horaFin));
-
-                eventoService.save(evento);
-                dialog.close();
-                actualizarGrid(fecha);
-                Notification.show("Evento reprogramado ✔️");
-            } catch (Exception ex) {
-                Notification.show("❌ Error: formato inválido");
+    private void cargarEventosEnCalendario() {
+        if (gerenteAutenticado != null) {
+            List<Evento> eventos = eventoService.findByGerenteId(gerenteAutenticado.getId());
+            for (Evento ev : eventos) {
+                Entry entrada = new Entry(String.valueOf(ev.getId()));
+                entrada.setTitle(ev.getTitulo());
+                entrada.setStart(ev.getFechaInicio());
+                entrada.setEnd(ev.getFechaFin());
+                entrada.setColor("blue");
+                provider.addEntries(List.of(entrada));
             }
+        }
+    }
+
+    private void mostrarDialogoCrearEvento(LocalDateTime fechaInicio) {
+        Dialog dialog = new Dialog();
+        dialog.setHeaderTitle("Nuevo Evento");
+
+        TextField titulo = new TextField("Título");
+        TextArea descripcion = new TextArea("Descripción");
+        DateTimePicker fechaInicioPicker = new DateTimePicker("Fecha y hora de inicio");
+        fechaInicioPicker.setValue(fechaInicio);
+        DateTimePicker fechaFinPicker = new DateTimePicker("Fecha y hora de fin");
+        fechaFinPicker.setValue(fechaInicio.plusHours(1));
+
+        Button guardar = new Button("Guardar", e -> {
+            if (titulo.isEmpty()) {
+                Notification.show("Debes ingresar un título");
+                return;
+            }
+
+            Evento nuevo = new Evento();
+            nuevo.setTitulo(titulo.getValue());
+            nuevo.setDescripcion(descripcion.getValue());
+            nuevo.setFechaInicio(fechaInicioPicker.getValue());
+            nuevo.setFechaFin(fechaFinPicker.getValue());
+            nuevo.setGerente(gerenteAutenticado);
+
+            Evento guardado = eventoService.save(nuevo);
+
+            Entry entrada = new Entry(String.valueOf(guardado.getId()));
+            entrada.setTitle(titulo.getValue() + " - " + descripcion.getValue());
+            entrada.setStart(guardado.getFechaInicio());
+            entrada.setEnd(guardado.getFechaFin());
+            entrada.setColor("blue");
+
+            provider.addEntries(List.of(entrada));
+            provider.refreshAll();
+            dialog.close();
+            Notification.show("Evento creado");
         });
 
-        VerticalLayout contenido = new VerticalLayout(nuevaFecha, nuevaHoraInicio, nuevaHoraFin, guardar);
-        dialog.add(contenido);
+        VerticalLayout layout = new VerticalLayout(titulo, descripcion, fechaInicioPicker, fechaFinPicker, guardar);
+        dialog.add(layout);
         dialog.open();
     }
 
