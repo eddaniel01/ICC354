@@ -1,2 +1,3 @@
 rootProject.name = 'plataforma-libros'
 include 'config-server', 'eureka-server'
+include 'auth-service'
