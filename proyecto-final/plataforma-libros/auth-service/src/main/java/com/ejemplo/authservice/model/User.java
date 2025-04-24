@@ -3,10 +3,12 @@ package com.ejemplo.authservice.model;
 import jakarta.persistence.*;
 import lombok.*;
 import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import java.util.Collection;
 import java.util.Collections;
+import java.util.List;
 
 @Entity
 @Table(name = "users")
@@ -29,9 +31,8 @@ public class User implements UserDetails {
     // Métodos de la interfaz UserDetails
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return Collections.emptyList(); // Puedes devolver los roles como authorities si usas roles con GrantedAuthority
+        return List.of(new SimpleGrantedAuthority("ROLE_" + this.role.name()));
     }
-
     @Override
     public boolean isAccountNonExpired() {
         return true;
