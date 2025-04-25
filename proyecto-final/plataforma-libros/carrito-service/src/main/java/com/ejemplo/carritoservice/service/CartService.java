@@ -2,14 +2,12 @@ package com.ejemplo.carritoservice.service;
 
 import com.ejemplo.carritoservice.model.Cart;
 import com.ejemplo.carritoservice.model.CartItem;
-import com.ejemplo.carritoservice.model.Order;
 import com.ejemplo.carritoservice.repository.CartItemRepository;
 import com.ejemplo.carritoservice.repository.CartRepository;
-import com.ejemplo.carritoservice.repository.OrderRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -17,41 +15,47 @@ public class CartService {
 
     private final CartRepository cartRepository;
     private final CartItemRepository cartItemRepository;
-    private final OrderRepository orderRepository;
 
-    public Cart getCartByUser(String username) {
+    public Cart getCartByUsername(String username) {
         return cartRepository.findByUsername(username).orElseGet(() -> {
             Cart newCart = Cart.builder().username(username).build();
             return cartRepository.save(newCart);
         });
     }
 
-    public Cart addItemToCart(String username, CartItem item) {
-        Cart cart = getCartByUser(username);
-        item.setCart(cart);
-        cart.getItems().add(cartItemRepository.save(item));
+    public Cart addItem(String username, String bookId, String title, double price) {
+        Cart cart = getCartByUsername(username);
+
+        CartItem item = CartItem.builder()
+                .bookId(bookId)
+                .title(title)
+                .price(price)
+                .cart(cart)
+                .build();
+
+        cart.getItems().add(item);
+        cartRepository.save(cart);
+        return cart;
+    }
+
+    public Cart removeItem(String username, Long itemId) {
+        Cart cart = getCartByUsername(username);
+        Optional<CartItem> itemToRemove = cart.getItems().stream()
+                .filter(i -> i.getId().equals(itemId))
+                .findFirst();
+
+        itemToRemove.ifPresent(item -> {
+            cart.getItems().remove(item);
+            cartItemRepository.delete(item);
+        });
+
         return cartRepository.save(cart);
     }
 
-    public void removeItem(Long itemId) {
-        cartItemRepository.deleteById(itemId);
-    }
-
-    public Order confirmOrder(String username) {
-        Cart cart = getCartByUser(username);
-        double total = cart.getItems().stream().mapToDouble(CartItem::getPrice).sum();
-
-        Order order = Order.builder()
-                .username(username)
-                .totalAmount(total)
-                .build();
-
-        cart.getItems().clear(); // vaciar carrito
-        cartRepository.save(cart);
-        return orderRepository.save(order);
-    }
-
-    public List<Order> getOrders(String username) {
-        return orderRepository.findByUsername(username);
+    public Cart clearCart(String username) {
+        Cart cart = getCartByUsername(username);
+        cart.getItems().clear();
+        cartItemRepository.deleteAll();
+        return cartRepository.save(cart);
     }
 }
