@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { Button, TextField, Box, Typography, Paper, CircularProgress, Alert } from "@mui/material";
 import { register as registerApi } from "../api/authApi";
@@ -11,7 +11,7 @@ type RegisterFormInputs = {
 };
 
 export default function Register() {
-  const { register, handleSubmit, watch } = useForm<RegisterFormInputs>();
+  const { register, handleSubmit } = useForm<RegisterFormInputs>();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
@@ -36,8 +36,23 @@ export default function Register() {
   };
 
   return (
-    <Box display="flex" justifyContent="center" alignItems="center" minHeight="100vh" bgcolor="#222">
-      <Paper elevation={5} sx={{ p: 4, width: 360 }}>
+    <Box 
+      display="flex"
+      justifyContent="center"
+      alignItems="center"
+      minHeight="100vh"
+      sx={{
+        bgcolor: "linear-gradient(135deg, #1a237e 0%, #f7f7fa 100%)"
+      }}
+    >
+      <Paper elevation={8}
+        sx={{
+          p: 5,
+          width: 370,
+          borderRadius: 4,
+          boxShadow: "0px 4px 20px rgba(0,0,0,0.13)"
+        }}
+      >
         <Typography variant="h5" mb={2} align="center" color="primary">Registrarse</Typography>
         <form onSubmit={handleSubmit(onSubmit)}>
           <TextField

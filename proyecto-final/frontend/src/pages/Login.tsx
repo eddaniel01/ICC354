@@ -1,33 +1,47 @@
 // src/pages/Login.tsx
-import React, { useState } from "react";
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { Button, TextField, Box, Typography, Paper, CircularProgress, Alert, Link } from "@mui/material";
 import { useAuth } from "../contexts/AuthContext";
 import { login as loginApi } from "../api/authApi";
 import { AuthResponse } from "../types/Auth";
-
+import { useNavigate, Navigate } from "react-router-dom";
 
 type LoginFormInputs = { username: string; password: string };
 
 export default function Login() {
   const { register, handleSubmit } = useForm<LoginFormInputs>();
-  const { login } = useAuth();
+  const { user, login } = useAuth();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const navigate = useNavigate();
+
+  // 🚦 Si ya está autenticado, redirige por rol
+  if (user) {
+    if (user.roles.includes("ADMIN")) return <Navigate to="/admin" replace />;
+    if (user.roles.includes("USER")) return <Navigate to="/dashboard" replace />;
+    return <Navigate to="/profile" replace />;
+  }
 
   const onSubmit = async (data: LoginFormInputs) => {
     setLoading(true);
     setError("");
     try {
       const res = await loginApi(data);
-      // Forzar el tipo (ya está tipado si hiciste el cambio en authApi.ts)
       const user: AuthResponse = res.data;
       login({
         username: user.username,
-        roles: [user.role], // O user.roles si en backend es array
+        roles: [user.role], // o user.roles si es array
         token: user.token,
       });
-      window.location.href = "/";
+      // Redirecciona según rol
+      if (user.role === "ADMIN") {
+        navigate("/admin");
+      } else if (user.role === "USER") {
+        navigate("/dashboard");
+      } else {
+        navigate("/profile");
+      }
     } catch (err: any) {
       setError("Usuario o contraseña incorrectos");
     } finally {
@@ -36,8 +50,22 @@ export default function Login() {
   };
 
   return (
-    <Box display="flex" justifyContent="center" alignItems="center" minHeight="100vh" bgcolor="#222">
-      <Paper elevation={5} sx={{ p: 4, width: 360 }}>
+    <Box  display="flex"
+      justifyContent="center"
+      alignItems="center"
+      minHeight="100vh"
+      sx={{
+        bgcolor: "linear-gradient(135deg, #1a237e 0%, #f7f7fa 100%)"
+      }}
+    >
+      <Paper  elevation={8}
+        sx={{
+          p: 5,
+          width: 370,
+          borderRadius: 4,
+          boxShadow: "0px 4px 20px rgba(0,0,0,0.13)"
+        }}
+      >
         <Typography variant="h5" mb={2} align="center" color="primary">Iniciar Sesión</Typography>
         <form onSubmit={handleSubmit(onSubmit)}>
           <TextField
