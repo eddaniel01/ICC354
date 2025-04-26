@@ -9,6 +9,7 @@ import Navbar from "./components/Navbar";
 import Catalog from "./pages/Catalog";
 import Cart from "./pages/Cart";
 import { CartProvider } from "./contexts/CartContext";
+import AdminUsersPage from "./pages/AdminUsersPage";
 
 function App() {
   return (
@@ -37,6 +38,14 @@ function App() {
               </ProtectedRoute>
             }
           />
+          <Route
+          path="/admin/users"
+          element={
+            <ProtectedRoute allowedRoles={["ADMIN"]}>
+              <AdminUsersPage />
+            </ProtectedRoute>
+          }
+        />
           <Route
             path="/dashboard"
             element={

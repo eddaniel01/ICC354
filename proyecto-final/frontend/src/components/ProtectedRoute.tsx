@@ -16,7 +16,7 @@ export default function ProtectedRoute({ children, allowedRoles }: ProtectedRout
   }
 
   // Si tienes roles tipo string o array, ajusta esto:
-  const userRoles = Array.isArray(user.roles) ? user.roles : [user.roles];
+  const userRoles = user.roles; // user.roles es un array, user.role es un string
   if (allowedRoles && !allowedRoles.some((role) => userRoles.includes(role))) {
     // No tiene permiso, redirige a Home o NotFound
     return <Navigate to="/" />;
