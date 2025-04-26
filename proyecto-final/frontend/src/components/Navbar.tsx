@@ -1,10 +1,13 @@
 import { AppBar, Toolbar, Button, Typography, Avatar, Box } from "@mui/material";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 
 export default function Navbar() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+
+  const isAuthPage = location.pathname === "/login" || location.pathname === "/register";
 
   const handleLogout = () => {
     logout();
@@ -17,7 +20,17 @@ export default function Navbar() {
         <Typography variant="h5" sx={{ flexGrow: 1, fontWeight: 700, letterSpacing: 1 }}>
           Book Store
         </Typography>
-        {user && (
+        {/* Mostrar solo los botones de login/register si está en esas páginas */}
+        {isAuthPage ? (
+          <>
+            <Button color="inherit" component={Link} to="/login" sx={{ mx: 1 }}>
+              Iniciar Sesión
+            </Button>
+            <Button color="inherit" component={Link} to="/register" sx={{ mx: 1 }}>
+              Registrarse
+            </Button>
+          </>
+        ) : user ? (
           <>
             <Box sx={{ display: "flex", alignItems: "center", mr: 2 }}>
               <Avatar sx={{ width: 32, height: 32, bgcolor: "secondary.main", mr: 1 }}>
@@ -44,8 +57,7 @@ export default function Navbar() {
               Cerrar sesión
             </Button>
           </>
-        )}
-        {!user && (
+        ) : (
           <>
             <Button color="inherit" component={Link} to="/login" sx={{ mx: 1 }}>
               Iniciar Sesión
