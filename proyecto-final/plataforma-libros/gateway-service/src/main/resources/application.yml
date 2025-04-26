@@ -23,11 +23,7 @@ spring:
         - id: carrito-service
           uri: lb://carrito-service
           predicates:
-            - Path=/api/carrito/**
-        - id: carrito-service
-          uri: lb://carrito-service
-          predicates:
-            - Path=/api/carrito/**
+            - Path=/api/cart/**
         # Agrega aquí los otros servicios conforme los crees
 
 eureka:
