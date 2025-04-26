@@ -47,8 +47,8 @@ public class UserController {
         return userRepository.findById(id)
                 .map(user -> {
                     user.setUsername(userDetails.getUsername());
-                    // Encripta solo si la password fue cambiada
-                    if (!userDetails.getPassword().equals(user.getPassword())) {
+                    // Solo actualiza si password viene y no es vacío
+                    if (userDetails.getPassword() != null && !userDetails.getPassword().isEmpty()) {
                         user.setPassword(passwordEncoder.encode(userDetails.getPassword()));
                     }
                     user.setRole(userDetails.getRole());
