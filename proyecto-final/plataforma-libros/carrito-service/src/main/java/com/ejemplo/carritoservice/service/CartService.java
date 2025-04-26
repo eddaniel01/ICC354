@@ -7,6 +7,7 @@ import com.ejemplo.carritoservice.repository.CartRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -17,10 +18,14 @@ public class CartService {
     private final CartItemRepository cartItemRepository;
 
     public Cart getCartByUsername(String username) {
-        return cartRepository.findByUsername(username).orElseGet(() -> {
-            Cart newCart = Cart.builder().username(username).build();
-            return cartRepository.save(newCart);
-        });
+        List<Cart> carts = cartRepository.findAllByUsername(username);
+        if (carts.size() > 1) {
+            throw new IllegalStateException("Se encontraron múltiples carritos para el usuario: " + username);
+        }
+        // Si no hay, crea uno nuevo
+        return carts.isEmpty()
+                ? cartRepository.save(Cart.builder().username(username).build())
+                : carts.get(0);
     }
 
     public Cart addItem(String username, String bookId, String title, double price) {
