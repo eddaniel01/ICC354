@@ -4,12 +4,17 @@ import PeopleAltIcon from '@mui/icons-material/PeopleAlt';
 import MenuBookIcon from '@mui/icons-material/MenuBook';
 import { useNavigate } from "react-router-dom";
 import { getAllUsers } from "../api/usersApi";
+import { getAllBooks } from "../api/catalogApi";
 // import { getAllBooks } from "../api/catalogApi";
 
 export default function AdminDashboard() {
   const navigate = useNavigate();
   const [totalUsuarios, setTotalUsuarios] = useState<number | null>(null);
-  // const [totalLibros, setTotalLibros] = useState<number | null>(null);
+  const [totalLibros, setTotalLibros] = useState<number | null>(null);
+
+  useEffect(() => {
+    getAllBooks().then(books => setTotalLibros(books.length));
+  }, []);
 
   useEffect(() => {
     getAllUsers().then(res => setTotalUsuarios(res.data.length));
@@ -49,8 +54,7 @@ export default function AdminDashboard() {
             <CardContent sx={{ flexGrow: 1 }}>
               <Typography variant="h6">Libros en Catálogo</Typography>
               <Typography variant="h3" fontWeight="bold">
-                {/* totalLibros !== null ? totalLibros : <CircularProgress size={24} /> */}
-                (próximamente)
+                {totalLibros !== null ? totalLibros : <CircularProgress size={24} />}
               </Typography>
             </CardContent>
           </Card>

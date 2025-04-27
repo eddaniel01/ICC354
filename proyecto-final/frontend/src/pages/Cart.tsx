@@ -1,20 +1,57 @@
 import { useCart } from "../contexts/CartContext";
+import { useAuth } from "../contexts/AuthContext";
+import { createOrder } from "../api/ordersApi";
 import ShoppingCartIcon from "@mui/icons-material/ShoppingCart";
 import DeleteIcon from "@mui/icons-material/Delete";
 import RemoveIcon from "@mui/icons-material/Remove";
 import AddIcon from "@mui/icons-material/Add";
+import CreditCardIcon from "@mui/icons-material/CreditCard";
 import {
   Box, Typography, Card, CardContent, List,
-  ListItem, IconButton, Button, Divider, Stack
+  ListItem, IconButton, Button, Divider, Stack,
+  Dialog, DialogTitle, DialogContent, DialogActions, TextField, CircularProgress, Fade
 } from "@mui/material";
+import { useState } from "react";
 
 export default function Cart() {
   const { cart, removeFromCart, clearCart, increaseQuantity, decreaseQuantity } = useCart();
+  const { user } = useAuth();
+  const [loading, setLoading] = useState(false);
+
+  // Estado para el modal de pago simulado
+  const [payOpen, setPayOpen] = useState(false);
+  const [cardNumber, setCardNumber] = useState("");
+  const [cardName, setCardName] = useState("");
+  const [cardError, setCardError] = useState("");
 
   const total = cart.reduce((acc, item) => acc + item.price * (item.quantity ?? 1), 0);
 
+  // Al hacer checkout, abre el modal de pago
   const handleCheckout = () => {
-    alert("Funcionalidad de pago pendiente...");
+    setCardNumber("");
+    setCardName("");
+    setCardError("");
+    setPayOpen(true);
+  };
+
+  // Simula el pago y registra la orden
+  const handlePay = async () => {
+    if (!cardNumber || !cardName) {
+      setCardError("Completa todos los campos de la tarjeta.");
+      return;
+    }
+    setLoading(true);
+    setCardError("");
+    try {
+      await createOrder(user!.username);
+      await clearCart();
+      setPayOpen(false);
+      alert("¡Compra registrada con éxito! (Pago simulado)");
+    } catch (e) {
+      setCardError("No se pudo registrar la compra.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -89,9 +126,9 @@ export default function Cart() {
             size="large"
             onClick={handleCheckout}
             sx={{ fontWeight: 600, borderRadius: 2, mb: 1 }}
-            disabled={cart.length === 0}
+            disabled={cart.length === 0 || loading}
           >
-            Finalizar compra
+            {loading ? "Procesando..." : "Finalizar compra"}
           </Button>
           <Button
             variant="outlined"
@@ -106,6 +143,49 @@ export default function Cart() {
           </Button>
         </CardContent>
       </Card>
+
+      {/* MODAL DE PAGO SIMULADO */}
+      <Dialog open={payOpen} onClose={() => setPayOpen(false)} PaperProps={{ sx: { borderRadius: 3 } }}>
+        <DialogTitle>
+          <CreditCardIcon sx={{ mr: 1, color: "#1976d2" }} />
+          Pago con Tarjeta (Simulado)
+        </DialogTitle>
+        <DialogContent>
+          <TextField
+            label="Nombre en la tarjeta"
+            fullWidth
+            value={cardName}
+            onChange={e => setCardName(e.target.value)}
+            sx={{ mt: 1, mb: 2 }}
+          />
+          <TextField
+            label="Número de tarjeta"
+            fullWidth
+            value={cardNumber}
+            onChange={e => setCardNumber(e.target.value)}
+            sx={{ mb: 2 }}
+            inputProps={{ maxLength: 16 }}
+            placeholder="XXXX XXXX XXXX XXXX"
+          />
+          {cardError && (
+            <Fade in>
+              <Typography color="error" fontSize={15}>{cardError}</Typography>
+            </Fade>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setPayOpen(false)} disabled={loading}>Cancelar</Button>
+          <Button
+            variant="contained"
+            color="success"
+            onClick={handlePay}
+            disabled={loading}
+            startIcon={loading ? <CircularProgress color="inherit" size={18} /> : null}
+          >
+            {loading ? "Procesando..." : "Pagar"}
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 }
