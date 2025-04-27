@@ -24,6 +24,11 @@ spring:
           uri: lb://carrito-service
           predicates:
             - Path=/api/cart/**
+        - id: order-service
+          uri: lb://carrito-service  # <-- Usa el mismo si orders va en el mismo microservicio
+          predicates:
+            - Path=/api/orders/**
+
         # Agrega aquí los otros servicios conforme los crees
 
 eureka:
