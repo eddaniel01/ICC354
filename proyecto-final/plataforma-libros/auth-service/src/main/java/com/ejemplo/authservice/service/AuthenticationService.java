@@ -28,15 +28,20 @@ public class AuthenticationService {
         User user = new User();
         user.setUsername(request.getUsername());
         user.setPassword(passwordEncoder.encode(request.getPassword()));
-        user.setRole(Role.USER); // o ADMIN, según necesites
+        user.setRole(Role.USER);
         userRepository.save(user);
 
         String jwtToken = jwtService.generateToken(user);
-        return new AuthenticationResponse(jwtToken, user.getUsername(), user.getRole().name());
+        return AuthenticationResponse.builder()
+                .id(user.getId())
+                .token(jwtToken)
+                .username(user.getUsername())
+                .role(user.getRole().name())
+                .build();
     }
 
     public AuthenticationResponse authenticate(AuthenticationRequest request) {
-        Authentication auth = authenticationManager.authenticate(
+        authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
                         request.getUsername(),
                         request.getPassword()
@@ -47,6 +52,11 @@ public class AuthenticationService {
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
 
         String jwtToken = jwtService.generateToken(user);
-        return new AuthenticationResponse(jwtToken, user.getUsername(), user.getRole().name());
+        return AuthenticationResponse.builder()
+                .id(user.getId())
+                .token(jwtToken)
+                .username(user.getUsername())
+                .role(user.getRole().name())
+                .build();
     }
 }
