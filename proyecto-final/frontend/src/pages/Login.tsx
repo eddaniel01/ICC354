@@ -5,7 +5,7 @@ import { Button, TextField, Box, Typography, Paper, CircularProgress, Alert, Lin
 import { useAuth } from "../contexts/AuthContext";
 import { login as loginApi } from "../api/authApi";
 import { AuthResponse } from "../types/Auth";
-import { useNavigate, Navigate } from "react-router-dom";
+import { Navigate } from "react-router-dom";
 
 type LoginFormInputs = { username: string; password: string };
 
@@ -14,7 +14,6 @@ export default function Login() {
   const { user, login } = useAuth();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const navigate = useNavigate();
 
   // 🚦 Si ya está autenticado, redirige por rol
   if (user) {
@@ -24,25 +23,18 @@ export default function Login() {
   }
 
   const onSubmit = async (data: LoginFormInputs) => {
-    setLoading(true);
-    setError("");
+    setLoading(true); setError("");
     try {
       const res = await loginApi(data);
       const user: AuthResponse = res.data;
       login({
+        id: user.id,
         username: user.username,
-        roles: [user.role], // o user.roles si es array
+        roles: [user.role], // o roles si es array
         token: user.token,
       });
-      // Redirecciona según rol
-      if (user.role === "ADMIN") {
-        navigate("/admin");
-      } else if (user.role === "USER") {
-        navigate("/dashboard");
-      } else {
-        navigate("/profile");
-      }
-    } catch (err: any) {
+      // Redirigir...
+    } catch (err) {
       setError("Usuario o contraseña incorrectos");
     } finally {
       setLoading(false);

@@ -1,13 +1,14 @@
 import { useEffect, useState } from "react";
-import { getAllUsers, createUser, updateUser, deleteUser, User } from "../api/usersApi";
 import {
   Box, Typography, Table, TableBody, TableCell, TableHead, TableRow,
   Paper, Button, IconButton, TextField, Dialog, DialogActions, DialogContent,
-  DialogTitle, CircularProgress, Stack
-} from "@mui/material";
+  DialogTitle, CircularProgress, Stack, Tooltip} from "@mui/material";
 import DeleteIcon from "@mui/icons-material/Delete";
 import EditIcon from "@mui/icons-material/Edit";
 import AddIcon from "@mui/icons-material/Add";
+import VisibilityIcon from "@mui/icons-material/Visibility";
+import UserDetailsDialog from "../components/UserDetailsDialog";
+import { getAllUsers, createUser, updateUser, deleteUser, getUserById, User } from "../api/usersApi";
 
 export default function AdminUsersPage() {
   const [users, setUsers] = useState<User[]>([]);
@@ -15,6 +16,11 @@ export default function AdminUsersPage() {
   const [open, setOpen] = useState(false);
   const [editingUser, setEditingUser] = useState<User | null>(null);
   const [form, setForm] = useState({ username: "", role: "USER", password: "" });
+
+  // Detalles
+  const [detailOpen, setDetailOpen] = useState(false);
+  const [userDetails, setUserDetails] = useState<User | null>(null);
+  const [detailsLoading, setDetailsLoading] = useState(false);
 
   const fetchUsers = async () => {
     setLoading(true);
@@ -46,7 +52,6 @@ export default function AdminUsersPage() {
 
   const handleSave = async () => {
     if (editingUser) {
-      // Construye el payload sin password si está vacía
       const updatePayload: any = {
         username: form.username,
         role: form.role
@@ -67,34 +72,107 @@ export default function AdminUsersPage() {
     fetchUsers();
   };
 
+  // ------ VER DETALLES ------
+  const handleViewDetails = async (id: string) => {
+    setDetailsLoading(true);
+    setDetailOpen(true);
+    try {
+      const res = await getUserById(id);
+      setUserDetails(res.data);
+    } catch (err) {
+      setUserDetails(null);
+    }
+    setDetailsLoading(false);
+  };
+
+  const handleDetailsClose = () => {
+    setDetailOpen(false);
+    setUserDetails(null);
+  };
+
   return (
-    <Box sx={{ maxWidth: 800, mx: "auto", mt: 6 }}>
+    <Box sx={{ maxWidth: 900, mx: "auto", mt: 6 }}>
       <Stack direction="row" alignItems="center" justifyContent="space-between" mb={3}>
-        <Typography variant="h4">Gestión de Usuarios</Typography>
-        <Button variant="contained" startIcon={<AddIcon />} onClick={() => handleOpen()}>
+        <Typography variant="h4" sx={{ fontWeight: 700, letterSpacing: -1 }}>Gestión de Usuarios</Typography>
+        <Button
+          variant="contained"
+          startIcon={<AddIcon />}
+          sx={{
+            borderRadius: 3,
+            textTransform: "none",
+            fontWeight: 500,
+            boxShadow: "0 4px 20px 0 rgba(30,32,60,0.08)",
+            bgcolor: "#1976d2",
+            ":hover": { bgcolor: "#125ea9" }
+          }}
+          onClick={() => handleOpen()}
+        >
           Nuevo Usuario
         </Button>
       </Stack>
-      <Paper sx={{ p: 2 }}>
+      <Paper elevation={3} sx={{
+        p: 2,
+        borderRadius: 4,
+        boxShadow: "0px 6px 32px 0px rgba(30,32,60,0.08)",
+        bgcolor: "#fafbfc"
+      }}>
         {loading ? (
-          <CircularProgress />
+          <Stack alignItems="center" py={4}>
+            <CircularProgress />
+          </Stack>
         ) : (
-          <Table>
+          <Table sx={{ minWidth: 650, borderRadius: 4, overflow: 'hidden' }}>
             <TableHead>
-              <TableRow>
-                <TableCell>Usuario</TableCell>
-                <TableCell>Rol</TableCell>
-                <TableCell align="right">Acciones</TableCell>
+              <TableRow sx={{ bgcolor: "#e3e7ed" }}>
+                <TableCell sx={{ fontWeight: "bold" }}>Usuario</TableCell>
+                <TableCell sx={{ fontWeight: "bold" }}>Rol</TableCell>
+                <TableCell align="right" sx={{ fontWeight: "bold" }}>Acciones</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
               {users.map((user) => (
-                <TableRow key={user.id}>
+                <TableRow
+                  key={user.id}
+                  sx={{
+                    transition: "background 0.2s",
+                    "&:hover": { bgcolor: "#f1f6fa" }
+                  }}
+                >
                   <TableCell>{user.username}</TableCell>
-                  <TableCell>{user.role}</TableCell>
+                  <TableCell>
+                    <Box
+                      sx={{
+                        px: 1.5,
+                        py: 0.5,
+                        borderRadius: 2,
+                        bgcolor: user.role === "ADMIN" ? "#e3fcef" : "#e3e7ed",
+                        color: user.role === "ADMIN" ? "#219653" : "#374151",
+                        fontWeight: 500,
+                        fontSize: "0.97em",
+                        display: "inline-block"
+                      }}
+                    >
+                      {user.role}
+                    </Box>
+                  </TableCell>
                   <TableCell align="right">
-                    <IconButton onClick={() => handleOpen(user)}><EditIcon /></IconButton>
-                    <IconButton color="error" onClick={() => handleDelete(user.id)}><DeleteIcon /></IconButton>
+                    <Stack direction="row" spacing={1} justifyContent="flex-end">
+                      <Tooltip title="Ver Detalles">
+                        <IconButton color="primary" onClick={() => handleViewDetails(user.id)}>
+                          <VisibilityIcon />
+                        </IconButton>
+                      </Tooltip>
+                      <Tooltip title="Editar">
+                        <IconButton color="secondary" onClick={() => handleOpen(user)}>
+                          <EditIcon />
+                        </IconButton>
+                      </Tooltip>
+                      <Tooltip title="Eliminar">
+                        <IconButton color="error" onClick={() => handleDelete(user.id)}>
+                          <DeleteIcon />
+                        </IconButton>
+                      </Tooltip>
+                    </Stack>
                   </TableCell>
                 </TableRow>
               ))}
@@ -102,9 +180,22 @@ export default function AdminUsersPage() {
           </Table>
         )}
       </Paper>
-      <Dialog open={open} onClose={handleClose}>
-        <DialogTitle>{editingUser ? "Editar Usuario" : "Nuevo Usuario"}</DialogTitle>
-        <DialogContent sx={{ minWidth: 300 }}>
+      {/* --- MODAL DETALLE --- */}
+      <UserDetailsDialog
+        open={detailOpen}
+        onClose={handleDetailsClose}
+        userDetails={userDetails}
+        loading={detailsLoading}
+      />
+      {/* --- MODAL CREAR/EDITAR --- */}
+      <Dialog open={open} onClose={handleClose} PaperProps={{ sx: { borderRadius: 4, minWidth: 340 } }}>
+        <DialogTitle sx={{ bgcolor: "#1976d2", color: "#fff", pb: 2, borderTopLeftRadius: 16, borderTopRightRadius: 16 }}>
+          <Stack direction="row" alignItems="center" spacing={1}>
+            <AddIcon fontSize="small" />
+            {editingUser ? "Editar Usuario" : "Nuevo Usuario"}
+          </Stack>
+        </DialogTitle>
+        <DialogContent sx={{ mt: 1 }}>
           <TextField
             margin="dense"
             label="Usuario"
@@ -138,9 +229,9 @@ export default function AdminUsersPage() {
             />
           )}
         </DialogContent>
-        <DialogActions>
+        <DialogActions sx={{ pb: 2, px: 3 }}>
           <Button onClick={handleClose}>Cancelar</Button>
-          <Button onClick={handleSave} variant="contained">
+          <Button variant="contained" onClick={handleSave}>
             {editingUser ? "Actualizar" : "Crear"}
           </Button>
         </DialogActions>
