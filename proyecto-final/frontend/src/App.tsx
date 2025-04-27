@@ -10,6 +10,7 @@ import Catalog from "./pages/Catalog";
 import Cart from "./pages/Cart";
 import { CartProvider } from "./contexts/CartContext";
 import AdminUsersPage from "./pages/AdminUsersPage";
+import OrderHistory from "./pages/OrderHistory";
 
 function App() {
   return (
@@ -35,6 +36,14 @@ function App() {
             element={
               <ProtectedRoute allowedRoles={["ADMIN"]}>
                 <AdminDashboard />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/orders"
+            element={
+              <ProtectedRoute>
+                <OrderHistory />
               </ProtectedRoute>
             }
           />

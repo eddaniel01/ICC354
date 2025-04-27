@@ -43,6 +43,9 @@ export default function Navbar() {
             <Button color="inherit" component={Link} to="/profile" sx={{ mx: 1 }}>
               Perfil
             </Button>
+            <Button color="inherit" component={Link} to="/orders" sx={{ mx: 1 }}>
+              Historial
+            </Button>
             {user.roles.includes("ADMIN") && (
               <Button color="inherit" component={Link} to="/admin" sx={{ mx: 1 }}>
                 Admin

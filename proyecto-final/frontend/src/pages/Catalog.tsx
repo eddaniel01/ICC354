@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Book, getAllBooks } from "../api/catalogApi";
-import { useCart } from "../contexts/CartContext"; // IMPORTANTE!
+import { useCart } from "../contexts/CartContext";
 import {
   Grid,
   Button,
@@ -20,6 +20,7 @@ import {
 } from "@mui/material";
 import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
 import SearchIcon from '@mui/icons-material/Search';
+import BookDetailModal from "../components/BookDetailModal"; // 👈 Importa el modal
 
 export default function Catalog() {
   const [books, setBooks] = useState<Book[]>([]);
@@ -28,9 +29,11 @@ export default function Catalog() {
   const [page, setPage] = useState(1);
   const [query, setQuery] = useState("");
   const [snackbar, setSnackbar] = useState<{ open: boolean, message: string }>({ open: false, message: "" });
+  const [selectedBook, setSelectedBook] = useState<Book | null>(null); // 👈 Nuevo
+  const [detailOpen, setDetailOpen] = useState(false); // 👈 Nuevo
   const booksPerPage = 6;
 
-  const { addToCart } = useCart(); // USO DEL CONTEXTO!
+  const { addToCart } = useCart();
 
   useEffect(() => {
     setLoading(true);
@@ -45,7 +48,6 @@ export default function Catalog() {
     setPage(1);
   };
 
-  // Filtrar libros por búsqueda
   const filteredBooks = books.filter(book =>
     book.title.toLowerCase().includes(query.toLowerCase()) ||
     book.author.toLowerCase().includes(query.toLowerCase())
@@ -56,7 +58,6 @@ export default function Catalog() {
     page * booksPerPage
   );
 
-  // 🚀 NUEVO: Realmente agrega el libro al carrito
   const handleAddToCart = async (book: Book) => {
     try {
       await addToCart(book);
@@ -64,6 +65,15 @@ export default function Catalog() {
     } catch {
       setSnackbar({ open: true, message: "Error al agregar al carrito" });
     }
+  };
+  const handleAddToCartFromModal = async (book: Book) => {
+    await handleAddToCart(book);
+    setDetailOpen(false); // Cierra el modal al agregar
+  };
+  // 👇 Función para mostrar detalles
+  const handleShowDetail = (book: Book) => {
+    setSelectedBook(book);
+    setDetailOpen(true);
   };
 
   const handleChangePage = (_: React.ChangeEvent<unknown>, value: number) => {
@@ -115,10 +125,17 @@ export default function Catalog() {
                 height="180"
                 image={`https://picsum.photos/seed/${book.id}/350/180`}
                 alt={book.title}
-                sx={{ borderTopLeftRadius: 12, borderTopRightRadius: 12, objectFit: "cover" }}
+                sx={{ borderTopLeftRadius: 12, borderTopRightRadius: 12, objectFit: "cover", cursor: "pointer" }}
+                onClick={() => handleShowDetail(book)}
               />
               <CardContent sx={{ flexGrow: 1 }}>
-                <Typography variant="h6" sx={{ mb: 1 }}>{book.title}</Typography>
+                <Typography
+                  variant="h6"
+                  sx={{ mb: 1, cursor: "pointer" }}
+                  onClick={() => handleShowDetail(book)}
+                >
+                  {book.title}
+                </Typography>
                 <Typography color="text.secondary" sx={{ fontSize: 14, mb: 1 }}>
                   {book.author}
                 </Typography>
@@ -137,6 +154,14 @@ export default function Catalog() {
                   onClick={() => handleAddToCart(book)}
                 >
                   Agregar al carrito
+                </Button>
+                <Button
+                  variant="text"
+                  color="primary"
+                  sx={{ ml: 1, fontWeight: 500 }}
+                  onClick={() => handleShowDetail(book)}
+                >
+                  Ver Detalles
                 </Button>
               </CardActions>
             </Card>
@@ -165,6 +190,13 @@ export default function Catalog() {
         onClose={() => setSnackbar({ open: false, message: "" })}
         message={snackbar.message}
         anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      />
+      {/* MODAL DE DETALLE */}
+      <BookDetailModal
+        book={selectedBook}
+        open={detailOpen}
+        onClose={() => setDetailOpen(false)}
+        onAddToCart={handleAddToCartFromModal}
       />
     </Box>
   );
